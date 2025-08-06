@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <option name="USE_RELEASE_OPTION" value="false" />
+    <option name="DEFAULT_COMPILER" value="Eclipse" />
     <option name="PARALLEL_COMPILATION_OPTION" value="Enabled" />
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true" />
     </annotationProcessing>
-    <bytecodeTargetLevel target="23">
-      <module name="hdipSwOOAssignment2025-Stubs" target="23" />
+    <bytecodeTargetLevel target="18">
+      <module name="hdipSwOOAssignment2025-Stubs" target="18" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">

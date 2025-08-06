@@ -7,13 +7,15 @@ class FileReader {
     public static void main(String[] args, String mode) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(args[0])));
         FileWriter out = new FileWriter("output.txt");
+
         String next;
 
-        if (mode.equals("create")) {
-            Object[] sizes = getArrayLength(br);
-            createArray(args[0], sizes);
-            System.out.println("Successfully created array");
-        }
+//        if (mode.equals("create")) {
+//            Object[] sizes = getArrayLength(br);
+//            Object[][] encodings = createArray(args[0], sizes);
+//            System.out.println("Successfully created array");
+//            System.out.println(Arrays.deepToString(encodings));
+//        }
 
         while ((next = br.readLine()) != null) {
             out.write(next);
@@ -27,40 +29,61 @@ class FileReader {
 
     }
 
-    //./encodings-10000/encodings-10000.csv
-
-    private static Object[] getArrayLength(BufferedReader br) throws Exception {
-        short arrayLength = 2;
-        int amountOfElements = 0;
-        while (br.readLine() != null) amountOfElements++;
-
-        Object[] sizes = new Object[arrayLength];
-
-        sizes[0] = amountOfElements;
-        sizes[1] = arrayLength;
-        return sizes;
+    public static void decode(String source, String[][] array, String mode) {
+        String outputLocation = "./out.txt";
+        decode(source, outputLocation, array, mode);
     }
 
+    public static void decode(String source, String output, String[][] array, String mode) {
+        try {
+            BufferedReader br = getBufferedReader(source);
+            FileWriter out = new FileWriter(output, true);
+            ArrayGenerator ag = new ArrayGenerator();
+            int amountOfLines = ag.getAmountOfLines(source);
+            ProgressBar pb = new ProgressBar();
+            int indexToEncode = mode.equals("decode") ? 1 : 0;
+            int indexToDecpde = mode.equals("decode") ? 0 : 1;
+            int linesProcessed = 0;
 
-    private static Object[][] createArray(String file, Object[] sizes) throws Exception {
-        int amountOfElements = (Integer) sizes[0];
-        short arrayLength = (Short) sizes[1];
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+            String line;
 
+            while ((line = br.readLine()) != null) {
+                System.out.print(ConsoleColour.YELLOW);    //Change the colour of the console text
+                pb.printProgress(linesProcessed + 1, amountOfLines);
+                String[] words = line.toLowerCase().split("\\s+");
+                for (String word : words) {
+                    int index = 0;
+                    for (int i = 0; i < array[0].length; i++) {
+                        if (word.equals(array[0][i])) {
+                            index = i;
+                        }
+                    }
+                    out.write(array[1][index]);
+                    out.write(",");
+                }
+                out.write("\n");
+                linesProcessed++;
+            }
+            out.flush();
+            out.close();
+            br.close();
 
-        Object[][] array = new Object[arrayLength][amountOfElements];
+            System.out.println();
+            System.out.println("Successfully decoded file");
 
-        String line;
-        int i = 0;
-
-        while ((line = br.readLine()) != null) {
-                Object[] newLine = line.split(",");
-                array[0][i] = newLine[0];
-                array[1][i] = newLine[1];
-            i++;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
-        br.close();
-        return array;
     }
+
+    public static BufferedReader getBufferedReader(String source) throws Exception {
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(source)));
+        return br;
+    }
+
+    //./encodings-10000/encodings-10000.csv
+//    ./textfiles/BibleGod.txt
+
+
 }
