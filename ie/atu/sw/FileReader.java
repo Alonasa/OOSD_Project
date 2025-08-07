@@ -33,25 +33,25 @@ class FileReader {
                 System.out.print(ConsoleColour.YELLOW);    //Change the colour of the console text
                 pb.printProgress(linesProcessed + 1, amountOfLines);
                 String[] words = encodeMode ? line.toLowerCase().split("\\s+") : line.split(",");
-                for (String word : words) {
+                for (int word = 0; word < words.length; word++) {
                     if (encodeMode) {
                         int index = 0;
                         boolean needToFind = true;
                         while (needToFind) {
                             while (needToFind && index < arrLength) {
-                                if (word.equals(array[indexToEncode][index])) {
+                                if (words[word].equals(array[indexToEncode][index])) {
                                     stringBuilder(array, indexToDecode, index, out);
                                     needToFind = false;
                                     break;
                                 }
                                 index++;
                             }
-                            if(!needToFind){
+                            if (!needToFind) {
                                 break;
                             }
 
-                            if (checkNumeric(word)) {
-                                String[] numbers = word.split("");
+                            if (checkNumeric(words[word])) {
+                                String[] numbers = words[word].split("");
                                 for (String number : numbers) {
                                     index = 0;
                                     needToFind = true;
@@ -71,13 +71,15 @@ class FileReader {
                             }
                         }
 
-                        if (PATTERN.matcher(word).matches()) {
+                        if (PATTERN.matcher(words[word]).matches()) {
 
                         }
                     } else {
-                        if ((1 == words.length) && "0".equals(word)) {
+                        boolean firstEmpty = (0 == word && "0".equals(words[word]));
+                        if ((1 == words.length) && "0".equals(words[0])) {
+
                         } else {
-                            String str = array[indexToDecode][Integer.parseInt(word)].toString();
+                            String str = firstEmpty ? " " : array[indexToDecode][Integer.parseInt(words[word])].toString();
                             out.write(str);
                         }
                         out.write(" ");
