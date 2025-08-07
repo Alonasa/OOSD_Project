@@ -1,10 +1,12 @@
 package ie.atu.sw;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 class FileReader {
     private static final Pattern PATTERN = Pattern.compile(".*[,.!]+$");
+    private static final Pattern ISNUMBER = Pattern.compile("\\d+");
 
 
     public static void decode(String source, Object[][] array, String mode) {
@@ -21,9 +23,9 @@ class FileReader {
             ProgressBar pb = new ProgressBar();
             int indexToDecode = mode.equals("decode") ? 0 : 1;
             int indexToEncode = mode.equals("encode") ? 0 : 1;
-            final int arrLength = array[indexToEncode].length;
+            int arrLength = array[indexToEncode].length;
             int linesProcessed = 0;
-            final boolean encodeMode = mode.equals("encode");
+            boolean encodeMode = mode.equals("encode");
 
             String line;
 
@@ -34,21 +36,48 @@ class FileReader {
                 for (String word : words) {
                     if (encodeMode) {
                         int index = 0;
-                        for (int i = 0; i < arrLength; i++) {
-                            if (word.equals(array[indexToEncode][i])) {
-                                index = i;
+                        boolean needToFind = true;
+                        while (needToFind) {
+                            while (needToFind && index < arrLength) {
+                                if (word.equals(array[indexToEncode][index])) {
+                                    stringBuilder(array, indexToDecode, index, out);
+                                    needToFind = false;
+                                    break;
+                                }
+                                index++;
+                            }
+                            if(!needToFind){
+                                break;
+                            }
+
+                            if (checkNumeric(word)) {
+                                String[] numbers = word.split("");
+                                for (String number : numbers) {
+                                    index = 0;
+                                    needToFind = true;
+                                    while (needToFind && index < arrLength) {
+                                        if (number.equals(array[indexToEncode][index])) {
+                                            stringBuilder(array, indexToDecode, index, out);
+                                            needToFind = false;
+                                            break;
+                                        }
+                                        index++;
+                                    }
+                                }
+                            } else {
+                                index = 0;
+                                stringBuilder(array, indexToDecode, index, out);
+                                needToFind = false;
                             }
                         }
-                        String str = String.valueOf(array[indexToDecode][index]);
-                        out.write(str);
-                        out.write(",");
+
                         if (PATTERN.matcher(word).matches()) {
 
                         }
                     } else {
                         if ((1 == words.length) && "0".equals(word)) {
                         } else {
-                            final String str = array[indexToDecode][Integer.parseInt(word)].toString();
+                            String str = array[indexToDecode][Integer.parseInt(word)].toString();
                             out.write(str);
                         }
                         out.write(" ");
@@ -73,6 +102,17 @@ class FileReader {
     public static BufferedReader getBufferedReader(String source) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(source)));
         return br;
+    }
+
+
+    public static boolean checkNumeric(String word) {
+        return ISNUMBER.matcher(word).matches();
+    }
+
+    public static void stringBuilder(Object[][] array, int indexToDecode, int index, FileWriter out) throws IOException {
+        String str = String.valueOf(array[indexToDecode][index]);
+        out.write(str);
+        out.write(",");
     }
 
     //./encodings-10000/encodings-10000.csv
