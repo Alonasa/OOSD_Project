@@ -1,13 +1,12 @@
 package ie.atu.sw;
-
 import java.util.Scanner;
 
-import static java.lang.System.*;
+import static java.lang.System.in;
+import static java.lang.System.out;
 
 public class Menu {
-    ArrayGenerator ag = new ArrayGenerator();
-    FileReader fr = new FileReader();
-    ProgressBar pb = new ProgressBar();
+    private final ArrayGenerator ag = new ArrayGenerator();
+    private final Scanner = s;
 
     public void renderMenu() throws Exception {
         out.println(ConsoleColour.BLUE);
@@ -29,61 +28,61 @@ public class Menu {
         out.print("Select Option [1-8]>: ");
     }
 
-    String[][] array;
+    Object[][] array;
     String mapFileLocation = "./encodings-10000/encodings-10000.csv";
     String inputFileLocation = "./textfiles/BibleGod.txt";
     String outputFileLocation = "";
 
-    public boolean processMenuInput(boolean keepRunning) throws Exception {
-        Scanner scanner = new Scanner(in);
+    public Menu(){
+        s = new Scanner(in, StandardCharsets.UTF_8);
+    }
 
-        final String menuItem = scanner.nextLine();
+    public boolean processMenuInput(boolean keepRunning) throws Exception {
+        final Scanner scanner = new Scanner(in, StandardCharsets.UTF_8);
+
+        String menuItem = Integer.parseInt(s.next());
 
         switch (menuItem) {
             case "1" -> {
                 // ./encodings-10000/encodings-10000.csv
                 out.println("Please enter the location of the mapping file");
-                mapFileLocation = scanner.nextLine();
+                this.mapFileLocation = scanner.nextLine();
             }
             case "2" -> {
                 out.println("Please enter the location of the input file");
-                inputFileLocation = scanner.nextLine();
+                this.inputFileLocation = scanner.nextLine();
             }
             case "3" -> {
                 out.println("Please enter the location of the output file");
-                outputFileLocation = scanner.nextLine();
+                this.outputFileLocation = scanner.nextLine();
             }
             case "4" -> {
-                out.println("Begin Decodding");
-                out.println("Mapping file location: " + mapFileLocation);
-                if (mapFileLocation.isEmpty()) {
+                out.println("Begin Encoding");
+                out.println("Mapping file location: " + this.mapFileLocation);
+                if (this.mapFileLocation.isEmpty()) {
                     out.println("No mapping file specified");
                 }
-                if (inputFileLocation.isEmpty()) {
+                if (this.inputFileLocation.isEmpty()) {
                     out.println("No input file specified");
                 }
-                array = ag.getArray(mapFileLocation);
-
-                if (outputFileLocation.isEmpty()) {
-                    fr.decode(inputFileLocation, array, "decode");
+                this.array = this.ag.getArray(this.mapFileLocation);
+                if (this.outputFileLocation.isEmpty()) {
+                    FileReader.decode(this.inputFileLocation, this.array, "encode");
                 }else{
-                    fr.decode(inputFileLocation, outputFileLocation, array, "decode");
+                    FileReader.decode(this.inputFileLocation, this.outputFileLocation, this.array, "encode");
                 }
-
-
             }
             case "5" -> {
-                out.println("Begin Encoding");
-                out.println("Mapping file location: " + mapFileLocation);
-                if (mapFileLocation.isEmpty()) {
+                out.println("Begin Decodding");
+                out.println("Mapping file location: " + this.mapFileLocation);
+                if (this.mapFileLocation.isEmpty()) {
                     out.println("No mapping file specified");
                 }
-                if (inputFileLocation.isEmpty()) {
+                if (this.inputFileLocation.isEmpty()) {
                     out.println("No input file specified");
                 }
-                array = ag.getArray(mapFileLocation);
-                fr.decode(inputFileLocation, array, "encode");
-
+                array = this.ag.getArray(this.mapFileLocation);
+                FileReader.decode("./out.txt", this.array, "decode");
             }
             case "7" -> {
                 out.println("Goodbye! 7");

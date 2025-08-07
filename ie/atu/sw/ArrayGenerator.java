@@ -4,13 +4,13 @@ import java.io.BufferedReader;
 import java.util.Arrays;
 
 public class ArrayGenerator {
-    int ENCODED = 0;
-    int DECODED = 1;
+    private static final int DECODED = 0;
+    private static final int ENCODED = 1;
 
-    public String[][] getArray(String source) throws Exception {
+    public Object[][] getArray(String source) throws Exception {
         BufferedReader br = FileReader.getBufferedReader(source);
         Object[] sizes = getArrayLength(getAmountOfElements(source));
-        String[][] array = createArray(br, sizes);
+        Object[][] array = createArray(br, sizes);
         return array;
     }
 
@@ -20,7 +20,7 @@ public class ArrayGenerator {
 
 
     private Object[] getArrayLength(int amountOfElements) throws Exception {
-        short arrayLength = 2;
+        int arrayLength = 2;
 
         Object[] sizes = new Object[arrayLength];
 
@@ -45,18 +45,18 @@ public class ArrayGenerator {
     }
 
 
-    private String[][] createArray(BufferedReader br, Object[] sizes) throws Exception {
+    private Object[][] createArray(BufferedReader br, Object[] sizes) throws Exception {
         int amountOfElements = (Integer) sizes[0];
-        short arrayLength = (Short) sizes[1];
-        String[][] array = new String[arrayLength][amountOfElements];
+        int arrayLength =  (Integer) sizes[1];
+        Object[][] array = new Object[arrayLength][amountOfElements];
 
         String line;
         int i = 0;
 
         while ((line = br.readLine()) != null) {
             String[] newLine = line.split(",");
-            array[ENCODED][i] = newLine[ENCODED];
             array[DECODED][i] = newLine[DECODED];
+            array[ENCODED][i] = Integer.parseInt(newLine[ENCODED]);
             i++;
         }
 
