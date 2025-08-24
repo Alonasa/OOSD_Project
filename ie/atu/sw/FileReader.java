@@ -5,7 +5,8 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 class FileReader {
-    private static final Pattern PATTERN = Pattern.compile(".*[,.!]+$");
+    private static final String SPECIAL_CHARS = ".*[!&'()*+\\-.,:;=?\\[\\]`_]+.";
+    private static final Pattern PATTERN = Pattern.compile(SPECIAL_CHARS);
     private static final Pattern ISNUMBER = Pattern.compile("\\d+");
 
 
@@ -28,9 +29,11 @@ class FileReader {
             boolean encodeMode = mode.equals("encode");
 
             String line;
+            boolean previousNumeric = false;
+
 
             while (null != (line = br.readLine())) {
-                System.out.print(ConsoleColour.YELLOW);    //Change the colour of the console text
+                System.out.print(ConsoleColour.YELLOW);//Change the colour of the console text
                 pb.printProgress(linesProcessed + 1, amountOfLines);
                 String[] words = encodeMode ? line.toLowerCase().split("\\s+") : line.split(",");
                 for (int word = 0; word < words.length; word++) {
@@ -70,19 +73,24 @@ class FileReader {
                                 needToFind = false;
                             }
                         }
-
-                        if (PATTERN.matcher(words[word]).matches()) {
-
-                        }
                     } else {
-                        boolean firstEmpty = (0 == word && "0".equals(words[word]));
-                        if ((1 == words.length) && "0".equals(words[0])) {
-
-                        } else {
-                            String str = firstEmpty ? " " : array[indexToDecode][Integer.parseInt(words[word])].toString();
+                        boolean firstEmpty = "0".equals(words[0]);
+                        String str = array[indexToDecode][Integer.parseInt(words[word])].toString();
+                        if (!(1 == words.length && firstEmpty)) {
                             out.write(str);
+                            previousNumeric =
+                                    checkNumeric(array[indexToDecode][Integer.parseInt(words[(word + 1 < words.length ?
+                                            word + 1:
+                                            word)])].toString());
                         }
-                        out.write(" ");
+
+                        boolean islongNumber = checkLongNumber(previousNumeric, str);
+
+                        if (islongNumber){
+                            out.write("");
+                        }else {
+                            out.write(" ");
+                        }
                     }
                 }
                 out.write("\n");
@@ -115,6 +123,12 @@ class FileReader {
         String str = String.valueOf(array[indexToDecode][index]);
         out.write(str);
         out.write(",");
+    }
+
+
+    public static boolean checkLongNumber(boolean previousNumeric, String currentElement){
+        boolean isNumber = checkNumeric(currentElement);
+        return previousNumeric && isNumber;
     }
 
     //./encodings-10000/encodings-10000.csv
