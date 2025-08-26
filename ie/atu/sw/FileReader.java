@@ -10,6 +10,7 @@ class FileReader {
     private static final Pattern BY_WORD = Pattern.compile("\\s+");
     private static final Pattern BY_COMMA = Pattern.compile(",");
     private static final Pattern WORDS_OR_PUNCTUATION = Pattern.compile("(\\w+|[-\\p{Punct}])");
+    private static final Pattern BY_PUNCTUATION = Pattern.compile("\\p{Punct}");
     private static final String ENCODE_MODE = "encode";
     private static final String DECODE_MODE = "decode";
 
@@ -130,7 +131,7 @@ class FileReader {
 
                         boolean isLongNumber = checkLongNumber(nextNumeric, str);
 
-                        if (isLongNumber || nextElement.equals("-") || str.equals("-") || nextElement.equals(".") || nextElement.equals(")") || str.equals("(")) {
+                        if (isABoolean(isLongNumber, nextElement, str)) {
                             out.write("");
                         } else {
                             out.write(" ");
@@ -151,6 +152,10 @@ class FileReader {
             throw new RuntimeException(e);
         }
 
+    }
+
+    private static boolean isABoolean(boolean isLongNumber, String nextElement, String str) {
+        return isLongNumber || !nextElement.equals("[???]") && BY_PUNCTUATION.matcher(nextElement).find() && !nextElement.equals("(") || str.equals("(") || str.equals("-") || (str.equals(":") && checkNumeric(nextElement))  || str.equals("'");
     }
 
     public static BufferedReader getBufferedReader(String source) throws Exception {
