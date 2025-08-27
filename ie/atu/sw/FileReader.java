@@ -1,47 +1,58 @@
 package ie.atu.sw;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class FileReader {
+    private static final ArrayGenerator ag = new ArrayGenerator();
     private static final Pattern IS_NUMBER = Pattern.compile("\\d+");
     private static final Pattern BY_LETTER = Pattern.compile("");
     private static final Pattern BY_WORD = Pattern.compile("\\s+");
     private static final Pattern BY_COMMA = Pattern.compile(",");
     private static final Pattern WORDS_OR_PUNCTUATION = Pattern.compile("(\\w+|[-\\p{Punct}])");
     private static final Pattern BY_PUNCTUATION = Pattern.compile("\\p{Punct}");
-    private static final String ENCODE_MODE = "encode";
-    private static final String DECODE_MODE = "decode";
+    private static final ArrayMode ENCODE_MODE = ArrayMode.ENCODE;
+    private static final ArrayMode DECODE_MODE = ArrayMode.DECODE;
+    private static final ArrayMode SUFFIXES_MODE = ArrayMode.SUFFIXES;
 
 
-    public static void decode(String source, Object[][] array, String mode) {
-        String outputLocation = mode.equals(ENCODE_MODE) ? "./out.txt" : "./out-decoded.txt";
+    public static void decode(String source, Object[][] array, ArrayMode mode) {
+        String outputLocation = mode == ENCODE_MODE ? "./out.txt" : "./out-decoded.txt";
         decode(source, outputLocation, array, mode);
     }
 
-    public static void decode(String source, String output, Object[][] array, String mode) {
+
+    public static void decode(String source, String output, Object[][] array, ArrayMode mode) {
         try {
             BufferedReader br = getBufferedReader(source);
             FileWriter out = new FileWriter(output, true);
             ArrayGenerator ag = new ArrayGenerator();
             int amountOfLines = ag.getAmountOfLines(source);
             ProgressBar pb = new ProgressBar();
-            int indexToDecode = mode.equals(DECODE_MODE) ? 0 : 1;
-            int indexToEncode = mode.equals(ENCODE_MODE) ? 0 : 1;
+            int indexToDecode = mode == DECODE_MODE ? 0 : 1;
+            int indexToEncode = mode == ENCODE_MODE ? 0 : 1;
             int arrLength = array[indexToEncode].length;
             int linesProcessed = 0;
-            boolean encodeMode = mode.equals(ENCODE_MODE);
+            boolean encodeMode = mode == ENCODE_MODE;
 
             String line;
             boolean nextNumeric = false;
 
 
-            while (null != (line = br.readLine())) {
+//            Object[][] suffixes = ag.getArray("./encodings-10000/encodings-10000.csv", SUFFIXES_MODE);
+//            System.out.println(Arrays.deepToString(suffixes));
+
+            //System.out.println(Arrays.deepToString(array));
+
+            while ((line = br.readLine()) != null) {
                 System.out.print(ConsoleColour.YELLOW);//Change the colour of the console text
                 pb.printProgress(linesProcessed + 1, amountOfLines);
                 String[] words = encodeMode ? BY_WORD.split(line.toLowerCase()) : BY_COMMA.split(line);
                 int wordsLength = words.length;
+
                 for (int word = 0; word < wordsLength; word++) {
                     if (encodeMode) {
                         int index = 0;
@@ -70,8 +81,7 @@ class FileReader {
                                     resultArray[indexa++] = matcher.group();
                                 }
 
-
-                                if (0 < resultArray.length) {
+                                if (resultArray.length > 0) {
                                     for (String partition : resultArray) {
                                         index = 0;
                                         needToFind = true;
@@ -115,7 +125,7 @@ class FileReader {
                         String nextElement = array[indexToDecode][Integer.parseInt(words[(word + 1 < words.length ?
                                 word + 1 :
                                 word)])].toString();
-                        String previousElement = array[indexToDecode][Integer.parseInt(words[(word - 1 > 0 ?
+                        String previousElement = array[indexToDecode][Integer.parseInt(words[(word - 1 >= 0 ?
                                 word - 1 :
                                 word)])].toString();
 
@@ -149,24 +159,40 @@ class FileReader {
             System.out.println("Successfully decoded file");
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            System.out.println(e.getMessage());
         }
 
     }
 
+
     private static boolean isABoolean(boolean isLongNumber, String nextElement, String str) {
-        return isLongNumber || !nextElement.equals("[???]") && BY_PUNCTUATION.matcher(nextElement).find() && !nextElement.equals("(") || str.equals("(") || str.equals("-") || (str.equals(":") && checkNumeric(nextElement))  || str.equals("'");
+        Matcher matcher = BY_PUNCTUATION.matcher(nextElement);
+        boolean matchedByPunctuation = matcher.find();
+        return isABoolean(isLongNumber, nextElement, str, matchedByPunctuation);
     }
 
-    public static BufferedReader getBufferedReader(String source) throws Exception {
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(source)));
-        return br;
+    private static boolean isABoolean(boolean isLongNumber, String nextElement, String str, boolean matchedByPunctuation) {
+        return isLongNumber || !nextElement.equals("[???]") && matchedByPunctuation && !nextElement.equals("(") ||
+                str.equals("(") || str.equals("-") || (str.equals(":") && checkNumeric(nextElement)) || str.equals("'");
+    }
+
+
+    public static BufferedReader getBufferedReader(String source) {
+        try {
+            return new BufferedReader(new InputStreamReader(new FileInputStream(source),
+                    StandardCharsets.UTF_8));
+        } catch (FileNotFoundException e) {
+            String message = e.getMessage();
+            System.out.println(message);
+        }
+        return null;
     }
 
 
     public static boolean checkNumeric(String word) {
         return IS_NUMBER.matcher(word).matches();
     }
+
 
     public static void stringBuilder(Object[][] array, int indexToDecode, int index, FileWriter out) throws IOException {
         String str = String.valueOf(array[indexToDecode][index]);
@@ -180,8 +206,26 @@ class FileReader {
         return previousNumeric && isNumber;
     }
 
-    //./encodings-10000/encodings-10000.csv
-//    ./textfiles/BibleGod.txt
+
+    public int countElementsForSeparation(int counter, String element, ArrayMode mode) {
+        boolean isSuffix = checkForSuffix(element);
+        if (isSuffixMode(mode, isSuffix)) {
+            counter++;
+        }
+        return counter;
+    }
 
 
+    private boolean isSuffixMode(ArrayMode mode, boolean isSuffix) {
+        if (mode == SUFFIXES_MODE) {
+            return isSuffix;
+        } else {
+            return !isSuffix;
+        }
+    }
+
+
+    private static boolean checkForSuffix(String word) {
+        return word.startsWith("@@");
+    }
 }
