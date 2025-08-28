@@ -1,9 +1,26 @@
 package ie.atu.sw;
-
 import java.util.Arrays;
 
 public class LoggerUtil {
     private LoggerUtil() {
+    }
+
+    public static String buildString(Object... args){
+        StringBuilder messageString = new StringBuilder(4);
+        for (Object arg: args){
+            messageString.append(" ").append(arg);
+        }
+
+        return messageString.toString().trim();
+    }
+
+    public static String buildWord(Object... args){
+        StringBuilder messageString = new StringBuilder(4);
+        for (Object arg: args){
+            messageString.append(arg);
+        }
+
+        return messageString.toString().trim();
     }
 
     public static void printErrorMessage(String format, Object... args) {
@@ -37,10 +54,5 @@ public class LoggerUtil {
             return 0; // Default fallback value
         }
 
-    }
-
-    public static int convertToNumber(Object element) {
-        String arrayElement = Arrays.toString((int[]) element);
-        return Integer.parseInt(arrayElement);
     }
 }

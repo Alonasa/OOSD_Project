@@ -1,4 +1,5 @@
 package ie.atu.sw;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Arrays;
@@ -17,19 +18,16 @@ public class ArrayGenerator {
             return array;
         } catch (IOException e) {
             LoggerUtil.printErrorMessage("I/O Error Occur");
-        } catch (Exception e) {
-            LoggerUtil.printErrorMessage("Error occurred: %s", e);
         }
+
         return array;
     }
 
 
-    public void printArray(Object[][] array) {
+    public static void printArray(Object[][] array) {
         String arrayToPrint = Arrays.deepToString(array);
         System.out.println(arrayToPrint);
     }
-
-
 
 
     private static int[] getArrayLength(int amountOfElements) {
@@ -49,9 +47,10 @@ public class ArrayGenerator {
                 amountOfElements++;
             }
             return amountOfElements;
-        } catch (Exception e) {
+        } catch (IOException e) {
             LoggerUtil.printErrorMessage("Error occurred: ", e);
         }
+
         return amountOfElements;
     }
 
@@ -62,26 +61,28 @@ public class ArrayGenerator {
                 amountOfLines++;
             }
             return amountOfLines;
-        } catch (Exception e) {
+        } catch (IOException e) {
             LoggerUtil.printErrorMessage("Error: ", e);
         }
         return amountOfLines;
     }
 
 
-    private Object[][] createArray(BufferedReader br, int[] sizes) throws Exception {
+    public static Object[][] createArray(BufferedReader br, int[] sizes) {
         int amountOfElements = sizes[0];
         int arrayLength = sizes[1];
         Object[][] elementsToEncode = new Object[arrayLength][amountOfElements];
-
         String line;
         int i = 0;
-
-        while ((line = br.readLine()) != null) {
-            String[] newLine = line.split(",");
-            elementsToEncode[DECODED_INDEX][i] = newLine[DECODED_INDEX];
-            elementsToEncode[ENCODED_INDEX][i] = newLine[ENCODED_INDEX];
-            i++;
+        try (br) {
+            while ((line = br.readLine()) != null) {
+                String[] newLine = line.split(",");
+                elementsToEncode[DECODED_INDEX][i] = newLine[DECODED_INDEX];
+                elementsToEncode[ENCODED_INDEX][i] = newLine[ENCODED_INDEX];
+                i++;
+            }
+        } catch (IOException e) {
+            LoggerUtil.printErrorMessage("I/O Error");
         }
         return elementsToEncode;
     }

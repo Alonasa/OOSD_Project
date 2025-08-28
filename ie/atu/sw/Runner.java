@@ -1,7 +1,5 @@
 package ie.atu.sw;
 
-import static java.lang.System.out;
-
 public class Runner {
     private static final Menu menu = new Menu();
     private static boolean keepRunning = true;
@@ -14,7 +12,8 @@ public class Runner {
                 keepRunning = menu.processMenuInput(keepRunning);
             }
 
-            Thread.sleep(1000);
+            long millisecondsSleep = 1000L;
+            Thread.sleep(millisecondsSleep);
         } catch (InterruptedException e) {
             String message = e.getMessage();
             System.err.println(message);

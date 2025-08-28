@@ -3,20 +3,27 @@ package ie.atu.sw;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class FileReader {
-    private static final ArrayGenerator ag = new ArrayGenerator();
+    //Regex patterns
     private static final Pattern IS_NUMBER = Pattern.compile("\\d+");
-    private static final Pattern BY_LETTER = Pattern.compile("");
+    private static final Pattern BY_ELEMENT = Pattern.compile("");
     private static final Pattern BY_WORD = Pattern.compile("\\s+");
     private static final Pattern BY_COMMA = Pattern.compile(",");
-    private static final Pattern WORDS_OR_PUNCTUATION = Pattern.compile("(\\w+|[-\\p{Punct}])");
+    private static final Pattern WORDS_AND_PUNCTUATION = Pattern.compile("(\\w+|[-\\p{Punct}])");
     private static final Pattern BY_PUNCTUATION = Pattern.compile("\\p{Punct}");
+    private static final Pattern BY_SUFFIX = Pattern.compile("@@");
+    //Modes
     private static final ArrayMode ENCODE_MODE = ArrayMode.ENCODE;
     private static final ArrayMode DECODE_MODE = ArrayMode.DECODE;
     private static final ArrayMode SUFFIXES_MODE = ArrayMode.SUFFIXES;
+    private static final ArrayMode WORDS_MODE = ArrayMode.WORDS;
+    //ArrayIndexes
+    private static final int DECODED_INDEX = 0;
+    private static final int ENCODED_INDEX = 1;
 
 
     public static void decode(String source, Object[][] array, ArrayMode mode) {
@@ -31,107 +38,107 @@ class FileReader {
             FileWriter out = new FileWriter(output, true);
             ArrayGenerator ag = new ArrayGenerator();
             int amountOfLines = ag.getAmountOfLines(source);
-            ProgressBar pb = new ProgressBar();
             int indexToDecode = mode == DECODE_MODE ? 0 : 1;
             int indexToEncode = mode == ENCODE_MODE ? 0 : 1;
-            int arrLength = array[indexToEncode].length;
             int linesProcessed = 0;
             boolean encodeMode = mode == ENCODE_MODE;
 
             String line;
             boolean nextNumeric = false;
 
+            Object[][] suffixesList = filterArray(array, SUFFIXES_MODE);
+            Object[][] wordsList = filterArray(array, WORDS_MODE);
+            int wordsListLength = wordsList[indexToEncode].length;
+            int suffixesListLength = suffixesList[indexToEncode].length;
+            System.out.println(suffixesListLength);
+            System.out.println(wordsListLength);
+            //System.out.println(Arrays.deepToString(suffixesList));
+            System.out.println(Arrays.deepToString(suffixesList));
 
-//            Object[][] suffixes = ag.getArray("./encodings-10000/encodings-10000.csv", SUFFIXES_MODE);
-//            System.out.println(Arrays.deepToString(suffixes));
-
-            //System.out.println(Arrays.deepToString(array));
 
             while ((line = br.readLine()) != null) {
                 System.out.print(ConsoleColour.YELLOW);//Change the colour of the console text
-                pb.printProgress(linesProcessed + 1, amountOfLines);
-                String[] words = encodeMode ? BY_WORD.split(line.toLowerCase()) : BY_COMMA.split(line);
+                ProgressBar.printProgress(linesProcessed + 1, amountOfLines);
+                String lowerCased = line.toLowerCase(Locale.ROOT);
+                //Generate a mini array of words from a line element
+                String[] words = encodeMode ? BY_WORD.split(lowerCased) : BY_COMMA.split(line);
                 int wordsLength = words.length;
 
-                for (int word = 0; word < wordsLength; word++) {
+                //traversing through words array
+                for (int wordIndex = 0; wordIndex < wordsLength; wordIndex++) {
                     if (encodeMode) {
                         int index = 0;
                         boolean needToFind = true;
                         while (needToFind) {
-                            while (needToFind && index < arrLength) {
-                                if (words[word].equals(array[indexToEncode][index])) {
-                                    stringBuilder(array, indexToDecode, index, out);
+                            //send current to check if it exists in a mapping file
+                            //if yes than we process to the next word otherwise going for deeper search
+                            if (words[wordIndex].isEmpty()) {
+                                needToFind = false;
+                                stringBuilder(wordsList, indexToDecode, index, out);
+                            } else {
+                                needToFind = decodeExactMatchess(words[wordIndex], wordsList, indexToEncode,
+                                        indexToDecode, wordsListLength, out);
+//                                System.out.println(needToFind);
+                                while (needToFind) {
+                                    //System.out.println(words[word]);
+                                    //build the result array of elements which have punctuation inside
+                                    String[] withPunctuation = getElementsWithPunctuation(words[wordIndex]);
+                                    //System.out.println(Arrays.deepToString(resultArray));
+
+                                    if (withPunctuation.length > 0) {
+                                        for (String partition : withPunctuation) {
+                                            index = 0;
+                                            needToFind = true;
+                                            while (needToFind && index < wordsListLength) {
+                                                //checking if the current part is a number
+                                                boolean isNumber = checkNumeric(partition);
+                                                if (isNumber) {
+                                                    needToFind = decodeNumbers(partition, wordsList, indexToEncode,
+                                                            indexToDecode, wordsListLength,
+                                                            out);
+
+                                                }
+                                                //checking if current element in the map
+                                                else if (partition.equals(wordsList[indexToEncode][index])) {
+                                                    stringBuilder(wordsList, indexToDecode, index, out);
+                                                    needToFind = false;
+                                                }
+                                                else if (checkInSuffixes(suffixesList, partition) > 0) {
+                                                    int rightIndex = checkInSuffixes(suffixesList, partition);
+                                                    stringBuilder(array, indexToDecode, rightIndex, out);
+                                                    needToFind = false;
+                                                }
+
+                                                index++;
+                                            }
+
+                                            if (needToFind) {
+                                                index = 0;
+                                                stringBuilder(wordsList, indexToDecode, index, out);
+                                            }
+                                        }
+                                    } else {
+                                        stringBuilder(wordsList, indexToDecode, index, out);
+                                    }
                                     needToFind = false;
                                 }
-                                index++;
-                            }
-
-                            while (needToFind) {
-                                Matcher matcher = WORDS_OR_PUNCTUATION.matcher(words[word]);
-
-                                int count = 0;
-                                while (matcher.find()) {
-                                    count++;
-                                }
-                                String[] resultArray = new String[count];
-
-                                matcher.reset();
-                                int indexa = 0;
-                                while (matcher.find()) {
-                                    resultArray[indexa++] = matcher.group();
-                                }
-
-                                if (resultArray.length > 0) {
-                                    for (String partition : resultArray) {
-                                        index = 0;
-                                        needToFind = true;
-                                        while (needToFind && index < arrLength) {
-                                            if (checkNumeric(partition)) {
-                                                String[] numbers = BY_LETTER.split(partition);
-                                                for (String number : numbers) {
-                                                    index = 0;
-                                                    needToFind = true;
-                                                    while (needToFind && index < arrLength) {
-                                                        if (number.equals(array[indexToEncode][index])) {
-                                                            stringBuilder(array, indexToDecode, index, out);
-                                                            needToFind = false;
-                                                        }
-                                                        index++;
-                                                    }
-                                                }
-                                            } else if (partition.equals(array[indexToEncode][index]) && needToFind) {
-                                                stringBuilder(array, indexToDecode, index, out);
-                                                needToFind = false;
-                                            }
-                                            index++;
-                                        }
-
-                                        if (needToFind) {
-                                            index = 0;
-                                            stringBuilder(array, indexToDecode, index, out);
-                                        }
-                                    }
-                                } else {
-                                    index = 0;
-                                    stringBuilder(array, indexToDecode, index, out);
-
-                                }
-                                needToFind = false;
                             }
                         }
                     } else {
                         boolean firstEmpty = words[0].equals("0");
-                        String str = array[indexToDecode][Integer.parseInt(words[word])].toString();
-                        String nextElement = array[indexToDecode][Integer.parseInt(words[(word + 1 < words.length ?
-                                word + 1 :
-                                word)])].toString();
-                        String previousElement = array[indexToDecode][Integer.parseInt(words[(word - 1 >= 0 ?
-                                word - 1 :
-                                word)])].toString();
+                        String str = array[indexToDecode][Integer.parseInt(words[wordIndex])].toString();
+                        String nextElement = array[indexToDecode][Integer.parseInt(words[(wordIndex + 1 < words.length ?
+                                wordIndex + 1 :
+                                wordIndex)])].toString();
+                        String previousElement = array[indexToDecode][Integer.parseInt(words[(wordIndex - 1 >= 0 ?
+                                wordIndex - 1 :
+                                wordIndex)])].toString();
 
                         if (!(words.length == 1 && firstEmpty)) {
                             if (previousElement.equals(".") || str.length() == 1 && nextElement.equals(".")) {
-                                String capitalized = str.substring(0, 1).toUpperCase() + str.substring(1);
+                                String firstLetter = str.substring(0, 1).toUpperCase(Locale.ROOT);
+                                String restOfTheWord = str.substring(1);
+                                String capitalized = LoggerUtil.buildWord(firstLetter, restOfTheWord);
                                 out.write(capitalized);
                             } else {
                                 out.write(str);
@@ -141,7 +148,7 @@ class FileReader {
 
                         boolean isLongNumber = checkLongNumber(nextNumeric, str);
 
-                        if (isABoolean(isLongNumber, nextElement, str)) {
+                        if (isPunctuation(isLongNumber, nextElement, str)) {
                             out.write("");
                         } else {
                             out.write(" ");
@@ -154,78 +161,204 @@ class FileReader {
             out.flush();
             out.close();
             br.close();
-
-            System.out.println();
             System.out.println("Successfully decoded file");
 
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            LoggerUtil.printErrorMessage("I/O Error on decoding: ", e);
         }
+    }
 
+    private static String[] getElementsWithPunctuation(String element) {
+        Matcher matcher = WORDS_AND_PUNCTUATION.matcher(element);
+        int count = 0;
+        while (matcher.find()) {
+            count++;
+        }
+        String[] resultArray = new String[count];
+
+        matcher.reset();
+        int matchesCount = 0;
+        while (matcher.find()) {
+            resultArray[matchesCount++] = matcher.group();
+        }
+        System.out.println(Arrays.deepToString(resultArray));
+        return resultArray;
     }
 
 
-    private static boolean isABoolean(boolean isLongNumber, String nextElement, String str) {
+    private static boolean isPunctuation(boolean isLongNumber, String nextElement, String str) {
         Matcher matcher = BY_PUNCTUATION.matcher(nextElement);
         boolean matchedByPunctuation = matcher.find();
-        return isABoolean(isLongNumber, nextElement, str, matchedByPunctuation);
+        return isPunctuation(isLongNumber, nextElement, str, matchedByPunctuation);
     }
 
-    private static boolean isABoolean(boolean isLongNumber, String nextElement, String str, boolean matchedByPunctuation) {
-        return isLongNumber || !nextElement.equals("[???]") && matchedByPunctuation && !nextElement.equals("(") ||
-                str.equals("(") || str.equals("-") || (str.equals(":") && checkNumeric(nextElement)) || str.equals("'");
+    private static boolean isPunctuation(boolean isLongNumber, String nextWord, String word,
+                                         boolean matchedByPunctuation) {
+        return isLongNumber || !nextWord.equals("[???]") && matchedByPunctuation && !nextWord.equals("(") ||
+                word.equals("(") || word.equals("-") || (word.equals(":") && checkNumeric(nextWord)) || word.equals("'");
     }
 
 
-    public static BufferedReader getBufferedReader(String source) {
-        try {
-            return new BufferedReader(new InputStreamReader(new FileInputStream(source),
-                    StandardCharsets.UTF_8));
-        } catch (FileNotFoundException e) {
-            String message = e.getMessage();
-            System.out.println(message);
+    private static boolean decodeExactMatchess(String word,
+                                               Object[][] wordsList,
+                                               int indexToEncode,
+                                               int indexToDecode,
+                                               int wordsListLength,
+                                               FileWriter out) {
+        //Searches for a word in a specific list and processes it if found.
+        boolean needToFind = true;
+        int index = 0;
+
+        while (needToFind && index < wordsListLength) {
+            if (word.equals(wordsList[indexToEncode][index])) {
+                //add found word to the resulting file
+                stringBuilder(wordsList, indexToDecode, index, out);
+                needToFind = false;
+            }
+            index++;
         }
-        return null;
+
+        return needToFind; // Indicates whether the word was found and processed
     }
 
 
     public static boolean checkNumeric(String word) {
-        return IS_NUMBER.matcher(word).matches();
-    }
-
-
-    public static void stringBuilder(Object[][] array, int indexToDecode, int index, FileWriter out) throws IOException {
-        String str = String.valueOf(array[indexToDecode][index]);
-        out.write(str);
-        out.write(",");
+        //check if string might be the number
+        Matcher pattern = IS_NUMBER.matcher(word);
+        return pattern.matches();
     }
 
 
     public static boolean checkLongNumber(boolean previousNumeric, String currentElement) {
+        //check if the current element is number over 10 via comparing adjacent elements
         boolean isNumber = checkNumeric(currentElement);
         return previousNumeric && isNumber;
     }
 
 
-    public int countElementsForSeparation(int counter, String element, ArrayMode mode) {
-        boolean isSuffix = checkForSuffix(element);
-        if (isSuffixMode(mode, isSuffix)) {
-            counter++;
+    private static boolean decodeNumbers(String partition,
+                                         Object[][] wordsList,
+                                         int indexToEncode,
+                                         int indexToDecode,
+                                         int wordsListLength,
+                                         FileWriter out) {
+        String[] numbers = BY_ELEMENT.split(partition);
+        boolean needToFind = true;
+        for (String number : numbers) {
+            needToFind = decodeExactMatchess(number, wordsList, indexToEncode,
+                    indexToDecode, wordsListLength, out);
+        }
+        return needToFind;
+    }
+
+
+    public static int countElementsForSeparation(Object[] elements, ArrayMode mode) {
+        //method used to count amount elements for the future filtration in arrays
+        int counter = 0;
+        for (Object row : elements) {
+            String value = row.toString();
+            boolean isSuffix = checkForSuffix(value);
+            boolean isSuffixMode = isSuffixMode(mode, isSuffix);
+            if (isSuffixMode) {
+                counter++;
+            }
         }
         return counter;
     }
 
 
-    private boolean isSuffixMode(ArrayMode mode, boolean isSuffix) {
-        if (mode == SUFFIXES_MODE) {
-            return isSuffix;
-        } else {
-            return !isSuffix;
-        }
+    private static boolean isSuffixMode(ArrayMode mode, boolean isSuffix) {
+        return (mode == SUFFIXES_MODE) == isSuffix;
     }
 
 
     private static boolean checkForSuffix(String word) {
-        return word.startsWith("@@");
+        String prefix = String.valueOf(BY_SUFFIX);
+        return word.startsWith(prefix);
     }
+
+
+    private static String splitSuffix(String word) {
+        return BY_SUFFIX.split(word)[1];
+    }
+
+
+    private static int checkInSuffixes(Object[][] suffixesList, String element) {
+        int suffixesLength = suffixesList[0].length;
+        int bestSuffixIndex = -1;
+        int bestSuffixLength = 0;
+
+        for (int index = 0; index < suffixesLength; index++) {
+            String bareSuffix = (suffixesList[0][index]).toString();
+            String cleanSuffix = splitSuffix(bareSuffix);
+            boolean isSuffixMatch = element.endsWith(cleanSuffix);
+            int suffixLength = cleanSuffix.length();
+            if (isSuffixMatch && suffixLength > bestSuffixLength) {
+                System.out.println(cleanSuffix);
+                bestSuffixIndex = index;
+                bestSuffixLength = suffixLength;
+            }
+        }
+
+        if (bestSuffixIndex > 0) {
+            int bestMatch = LoggerUtil.convertToNumber((suffixesList[1][bestSuffixIndex]).toString());
+            return bestSuffixIndex;
+        }
+        return bestSuffixIndex;
+    }
+
+
+    private static Object[][] filterArray(Object[][] initialArray, ArrayMode mode) {
+        // Count the number of elements for the future array
+        int initialArrayLength = initialArray.length;
+        int rowCount = countElementsForSeparation(initialArray[0], mode);
+
+        // Create a new array with the filtered size
+        Object[][] filteredArray = new Object[initialArrayLength][rowCount];
+
+        // Populate the new array according to mode
+        int index = 0;
+        int arrayLength = initialArray[0].length;
+        for (int i = 0; i < arrayLength; i++) {
+            if (initialArray[0][i] != null) {
+                String value = initialArray[0][i].toString();
+                boolean isSuffix = checkForSuffix(value);
+
+                // Check if this element matches the mode criteria
+                boolean isSuffixes = (mode == SUFFIXES_MODE && isSuffix);
+                boolean isWords = (mode != SUFFIXES_MODE && !isSuffix);
+                if (isSuffixes || isWords) {
+                    // Copy both decoded and encoded values to maintain a relationship
+                    filteredArray[DECODED_INDEX][index] = initialArray[DECODED_INDEX][i];
+                    filteredArray[ENCODED_INDEX][index] = initialArray[ENCODED_INDEX][i];
+                    index++;
+                }
+            }
+        }
+        return filteredArray;
+    }
+
+
+    public static void stringBuilder(Object[][] array, int indexToDecode, int index, FileWriter out) {
+        try {
+            String str = String.valueOf(array[indexToDecode][index]);
+            out.write(str);
+            out.write(",");
+        } catch (IOException e) {
+            LoggerUtil.printErrorMessage("", e);
+        }
+    }
+
+
+    public static BufferedReader getBufferedReader(String source) {
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(source),
+                    StandardCharsets.UTF_8));
+            return br;
+        } catch (FileNotFoundException e) {
+            LoggerUtil.printErrorMessage("File Error: ", e);
+        }
+        return null;
+    }
+
 }

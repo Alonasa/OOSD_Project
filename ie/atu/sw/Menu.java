@@ -1,8 +1,6 @@
 package ie.atu.sw;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
-
 import static java.lang.System.in;
 import static java.lang.System.out;
 
@@ -73,7 +71,7 @@ public class Menu {
                     }
                 }
                 case 5 -> {
-                    out.println("Begin Decodding");
+                    out.println("Begin Decoding");
                     out.println("Mapping file location: " + mapFileLocation);
                     if (mapFileLocation.isEmpty()) {
                         out.println("No mapping file specified");
