@@ -2,7 +2,6 @@ package ie.atu.sw;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -73,63 +72,14 @@ public class FileReader {
                                 needToFind = false;
                                 stringBuilder(wordsList, indexToDecode, index, out);
                             } else {
-                                needToFind = decodeExactMatchess(words[wordIndex], wordsList, indexToEncode,
+                                // Try to find an exact match first
+                                needToFind = isExactMatch(words[wordIndex], wordsList, indexToEncode,
                                         indexToDecode, wordsListLength, out);
-                                while (needToFind) {
-                                    //build the result array of elements which have punctuation inside
-                                    String[] withPunctuation = getElementsWithPunctuation(words[wordIndex]);
 
-                                    if (withPunctuation.length > 0) {
-                                        for (String partition : withPunctuation) {
-                                            index = 0;
-                                            needToFind = true;
-                                            while (needToFind && index < wordsListLength) {
-                                                //checking if the current part is a number
-                                                boolean isNumber = checkNumeric(partition);
-                                                if (isNumber) {
-                                                    needToFind = decodeNumbers(partition, wordsList, indexToEncode,
-                                                            indexToDecode, wordsListLength,
-                                                            out);
-
-                                                }
-                                                //checking if current element in the map
-                                                else if (partition.equals(wordsList[indexToEncode][index])) {
-                                                    stringBuilder(wordsList, indexToDecode, index, out);
-                                                    needToFind = false;
-                                                }
-
-                                                index++;
-                                            }
-
-                                            if (needToFind) {
-                                                int suffixIndex = getSuffixIndex(suffixesList, words[wordIndex]);
-                                                if (suffixIndex > 0) {
-                                                    String bareSuffix = (suffixesList[0][suffixIndex]).toString();
-                                                    String cleanSuffix = splitSuffix(bareSuffix);
-                                                    String[] wordToCheck = splitWord(words[wordIndex],
-                                                            cleanSuffix);
-                                                    if(wordToCheck.length > 0){
-                                                        needToFind = decodeExactMatchess(wordToCheck[0],
-                                                                wordsList, indexToEncode,
-                                                                indexToDecode, wordsListLength, out);
-
-                                                        if (needToFind) {
-                                                            index = 0;
-                                                            stringBuilder(wordsList, indexToDecode, index, out);
-                                                        }
-                                                    }
-
-                                                    stringBuilder(suffixesList, indexToDecode, suffixIndex, out);
-                                                } else {
-                                                    index = 0;
-                                                    stringBuilder(wordsList, indexToDecode, index, out);
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        stringBuilder(wordsList, indexToDecode, index, out);
-                                    }
-                                    needToFind = false;
+                                // If no exact match found, process words with punctuation
+                                if (needToFind) {
+                                    needToFind = processWordsWithPunctuation(words[wordIndex], wordsList, suffixesList,
+                                            indexToEncode, indexToDecode, wordsListLength, out, index);
                                 }
                             }
                         }
@@ -209,26 +159,30 @@ public class FileReader {
     }
 
 
-    private static boolean isPunctuation(boolean isLongNumber, String nextElement, String str) {
+    private static boolean isPunctuation(boolean isLongNumber, String nextElement, String currentElement) {
         Matcher matcher = BY_PUNCTUATION.matcher(nextElement);
         boolean matchedByPunctuation = matcher.find();
-        return isPunctuation(isLongNumber, nextElement, str, matchedByPunctuation);
+
+        return isPunctuationMatch(isLongNumber, nextElement, currentElement, matchedByPunctuation);
     }
 
-    private static boolean isPunctuation(boolean isLongNumber, String nextWord, String word,
-                                         boolean matchedByPunctuation) {
-        return isLongNumber || !nextWord.equals("[???]") && matchedByPunctuation && !nextWord.equals("(") ||
-                word.equals("(") || word.equals("-") || (word.equals(":") && checkNumeric(nextWord)) || word.equals("'");
+    private static boolean isPunctuationMatch(boolean isLongNumber, String nextElement, String currentElement, boolean matchedByPunctuation) {
+        return isLongNumber
+                || (!nextElement.equals("[???]") && matchedByPunctuation && !nextElement.equals("("))
+                || currentElement.equals("(")
+                || currentElement.equals("-")
+                || (currentElement.equals(":") && checkNumeric(nextElement))
+                || currentElement.equals("'");
     }
 
 
-    private static boolean decodeExactMatchess(String word,
-                                               Object[][] wordsList,
-                                               int indexToEncode,
-                                               int indexToDecode,
-                                               int wordsListLength,
-                                               FileWriter out) {
-        //Searches for a word in a specific list and processes it if found.
+    private static boolean isExactMatch(String word,
+                                        Object[][] wordsList,
+                                        int indexToEncode,
+                                        int indexToDecode,
+                                        int wordsListLength,
+                                        FileWriter out) {
+        // Searches for a word in a specific list and processes it if found.
         boolean needToFind = true;
         int index = 0;
 
@@ -259,6 +213,81 @@ public class FileReader {
     }
 
 
+    private static boolean processWordsWithPunctuation(String word,
+                                                       Object[][] wordsList,
+                                                       Object[][] suffixesList,
+                                                       int indexToEncode,
+                                                       int indexToDecode,
+                                                       int wordsListLength,
+                                                       FileWriter out,
+                                                       int startIndex) {
+        //build the result array of elements which have punctuation inside
+        String[] withPunctuation = getElementsWithPunctuation(word);
+
+        if (withPunctuation.length == 0) {
+            stringBuilder(wordsList, indexToDecode, startIndex, out);
+            return false;
+        }
+
+        for (String partition : withPunctuation) {
+            int index = 0;
+            boolean needToFind = true;
+            while (needToFind && index < wordsListLength) {
+                //checking if the current part is a number
+                if (checkNumeric(partition)) {
+                    needToFind = decodeNumbers(partition, wordsList, indexToEncode,
+                            indexToDecode, wordsListLength, out);
+                }
+                //checking if current element in the map
+                else if (partition.equals(wordsList[indexToEncode][index])) {
+                    stringBuilder(wordsList, indexToDecode, index, out);
+                    needToFind = false;
+                }
+                index++;
+            }
+
+            if (needToFind) {
+                processSuffixes(word, wordsList, suffixesList, indexToEncode, indexToDecode, wordsListLength, out);
+            }
+        }
+
+        return false;
+    }
+
+    private static void processSuffixes(String word,
+                                        Object[][] wordsList,
+                                        Object[][] suffixesList,
+                                        int indexToEncode,
+                                        int indexToDecode,
+                                        int wordsListLength,
+                                        FileWriter out) {
+        //Method for the processing suffixes.
+        // If no match returns -1 and sends element 0 to the string builder
+        int ZERO_ELEMENT = 0;
+        int suffixIndex = getSuffixIndex(suffixesList, word);
+        if (suffixIndex > ZERO_ELEMENT) {
+            //If matched, separate the suffix from @@,
+            // splits it with the rest of the word
+            String bareSuffix = (suffixesList[ZERO_ELEMENT][suffixIndex]).toString();
+            String cleanSuffix = splitSuffix(bareSuffix);
+            String[] wordToCheck = splitWord(word, cleanSuffix);
+            if (wordToCheck.length > ZERO_ELEMENT) {
+                boolean needToFind = isExactMatch(wordToCheck[ZERO_ELEMENT],
+                        wordsList, indexToEncode,
+                        indexToDecode, wordsListLength, out);
+
+                if (needToFind) {
+                    stringBuilder(wordsList, indexToDecode, ZERO_ELEMENT, out);
+                }
+            }
+
+            stringBuilder(suffixesList, indexToDecode, suffixIndex, out);
+        } else {
+            stringBuilder(wordsList, indexToDecode, ZERO_ELEMENT, out);
+        }
+    }
+
+
     private static boolean decodeNumbers(String partition,
                                          Object[][] wordsList,
                                          int indexToEncode,
@@ -268,7 +297,7 @@ public class FileReader {
         String[] numbers = BY_ELEMENT.split(partition);
         boolean needToFind = true;
         for (String number : numbers) {
-            needToFind = decodeExactMatchess(number, wordsList, indexToEncode,
+            needToFind = isExactMatch(number, wordsList, indexToEncode,
                     indexToDecode, wordsListLength, out);
         }
         return needToFind;
@@ -307,8 +336,7 @@ public class FileReader {
 
 
     private static String[] splitWord(String word, String suffix) {
-        String[] prefix = word.split(suffix);
-        return prefix;
+        return word.split(suffix);
     }
 
 
@@ -323,15 +351,11 @@ public class FileReader {
             String cleanSuffix = splitSuffix(bareSuffix);
             boolean isSuffixMatch = element.endsWith(cleanSuffix);
             int suffixLength = cleanSuffix.length();
+
             if (isSuffixMatch && suffixLength > bestSuffixLength) {
                 bestSuffixIndex = index;
                 bestSuffixLength = suffixLength;
             }
-        }
-
-        if (bestSuffixIndex >= 0) {
-            String bestMatch = (suffixesList[0][bestSuffixIndex]).toString();
-
         }
 
         return bestSuffixIndex;
@@ -370,25 +394,26 @@ public class FileReader {
 
 
     public static void stringBuilder(Object[][] array, int indexToDecode, int index, FileWriter out) {
+        //Writes an element from the array to the output file with a comma separator
         try {
             String str = String.valueOf(array[indexToDecode][index]);
             out.write(str);
             out.write(",");
         } catch (IOException e) {
-            LoggerUtil.printErrorMessage("", e);
+            LoggerUtil.printErrorMessage("Error writing to output file: ", e);
         }
     }
 
 
     public static BufferedReader getBufferedReader(String source) {
+        // Creates a BufferedReader for the specified source file
         try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(source),
-                    StandardCharsets.UTF_8));
-            return br;
+            return new BufferedReader(new InputStreamReader(
+                    new FileInputStream(source), StandardCharsets.UTF_8));
         } catch (FileNotFoundException e) {
-            LoggerUtil.printErrorMessage("File Error: ", e);
+            LoggerUtil.printErrorMessage("File not found: " + source, e);
+            return null;
         }
-        return null;
     }
 
 }
