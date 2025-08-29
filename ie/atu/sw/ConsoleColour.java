@@ -1,5 +1,10 @@
 package ie.atu.sw;
 
+/**
+ * "@description" is reported (if configured).
+ *
+ */
+
 /*
  * ANSI escape sequences are a standard for controlling cursor location, colour, 
  * font styling, and other options on DOS, Mac and Linux terminals. The ANSI escape 
@@ -73,7 +78,7 @@ public enum ConsoleColour {
     CYAN_BOLD_BRIGHT			("Cyan [Bold High Intensity]", 	"1;96"),
     WHITE_BOLD_BRIGHT			("White [Bold High Intensity]", "1;97"),
 
-    //High Intensity backgrounds
+    //High-Intensity backgrounds
     BLACK_BACKGROUND_BRIGHT		("Black [High Intensity BG]", 	"0;100"),
     RED_BACKGROUND_BRIGHT		("Red [High Intensity BG]", 	"0;101"),
     GREEN_BACKGROUND_BRIGHT		("Green [High Intensity BG]",	"0;102"),
@@ -88,7 +93,7 @@ public enum ConsoleColour {
 	private static final String CTRL_SEQ_END = "m"; //Terminates control  
 	private final String description;
 	private final String colour;
-	
+    
 	ConsoleColour(String description, String colour) {
 		this.description = description;
 		this.colour = colour;
@@ -104,6 +109,9 @@ public enum ConsoleColour {
 	
 	@Override
     public String toString() {
-        return CTRL_SEQ_INTRO + this.colour + CTRL_SEQ_END; 
+        StringBuilder colour = new StringBuilder(CTRL_SEQ_INTRO);
+        colour.append(this.colour);
+        colour.append(CTRL_SEQ_END);
+        return colour.toString();
     }
 }
