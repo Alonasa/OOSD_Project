@@ -48,8 +48,7 @@ public class FileReader {
             Object[][] suffixesList = filterArray(array, SUFFIXES_MODE);
             Object[][] wordsList = filterArray(array, WORDS_MODE);
             int wordsListLength = wordsList[indexToEncode].length;
-            int suffixesListLength = suffixesList[indexToEncode].length;
-
+            boolean previousLineEmpty = true;
 
             while ((line = br.readLine()) != null) {
                 System.out.print(ConsoleColour.YELLOW);//Change the colour of the console text
@@ -135,8 +134,8 @@ public class FileReader {
                             }
                         }
                     } else {
+
                         boolean firstEmpty = words[DECODED_INDEX].equals("0");
-                        boolean previousEmpty = true;
                         String str = array[indexToDecode][Integer.parseInt(words[wordIndex])].toString();
                         String nextElement = array[indexToDecode][Integer.parseInt(words[(wordIndex + 1 < words.length ?
                                 wordIndex + 1 :
@@ -146,7 +145,7 @@ public class FileReader {
                                 wordIndex)])].toString();
 
                         if (!(words.length == 1 && firstEmpty)) {
-                            if (isABoolean(previousElement, previousEmpty, str, nextElement)) {
+                            if (isCapitalized(previousElement, previousLineEmpty, str, nextElement)) {
                                 String firstLetter = str.substring(0, 1).toUpperCase(Locale.ROOT);
                                 String restOfTheWord = str.substring(1);
                                 String capitalized = LoggerUtil.buildWord(firstLetter, restOfTheWord);
@@ -162,9 +161,9 @@ public class FileReader {
                                 nextNumeric = checkNumeric(nextElement);
 
                             }
-                        } else {
-                            previousEmpty = true;
                         }
+
+                        previousLineEmpty = line.length() == 2;
 
                         boolean isLongNumber = checkLongNumber(nextNumeric, str);
 
@@ -188,7 +187,7 @@ public class FileReader {
         }
     }
 
-    private static boolean isABoolean(String previousElement, boolean previousEmpty, String str, String nextElement) {
+    private static boolean isCapitalized(String previousElement, boolean previousEmpty, String str, String nextElement) {
         return previousElement.equals(".") || previousEmpty || str.length() == 1 && nextElement.equals(".");
     }
 
@@ -318,7 +317,6 @@ public class FileReader {
         int suffixesLength = suffixesList[0].length;
         int bestSuffixIndex = -1;
         int bestSuffixLength = 0;
-        String bestSuffix = "";
 
         for (int index = 0; index < suffixesLength; index++) {
             String bareSuffix = (suffixesList[0][index]).toString();
@@ -328,15 +326,12 @@ public class FileReader {
             if (isSuffixMatch && suffixLength > bestSuffixLength) {
                 bestSuffixIndex = index;
                 bestSuffixLength = suffixLength;
-                bestSuffix = cleanSuffix;
             }
         }
 
         if (bestSuffixIndex >= 0) {
             String bestMatch = (suffixesList[0][bestSuffixIndex]).toString();
-//            System.out.println(bestMatch);
-//
-//            System.out.println(Arrays.deepToString(splitWord(element, bestSuffix)));
+
         }
 
         return bestSuffixIndex;
