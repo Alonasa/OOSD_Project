@@ -5,7 +5,7 @@ import static java.lang.System.in;
 import static java.lang.System.out;
 
 public class Menu {
-    private final ArrayGenerator ag = new ArrayGenerator();
+    private final ArraysProcessor ag = new ArraysProcessor();
     private final Scanner scanner;
     private static final ArrayMode ENCODE_MODE = ArrayMode.ENCODE;
     private static final ArrayMode DECODE_MODE = ArrayMode.DECODE;

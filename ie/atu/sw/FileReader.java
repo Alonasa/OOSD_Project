@@ -14,11 +14,10 @@ public class FileReader {
     private static final Pattern BY_COMMA = Pattern.compile(",");
     private static final Pattern WORDS_AND_PUNCTUATION = Pattern.compile("(\\w+|[-\\p{Punct}])");
     private static final Pattern BY_PUNCTUATION = Pattern.compile("\\p{Punct}");
-    private static final Pattern BY_SUFFIX = Pattern.compile("@@");
     //Modes
     private static final ArrayMode ENCODE_MODE = ArrayMode.ENCODE;
     private static final ArrayMode DECODE_MODE = ArrayMode.DECODE;
-    private static final ArrayMode SUFFIXES_MODE = ArrayMode.SUFFIXES;
+    public static final ArrayMode SUFFIXES_MODE = ArrayMode.SUFFIXES;
     private static final ArrayMode WORDS_MODE = ArrayMode.WORDS;
     //ArrayIndexes
     private static final int DECODED_INDEX = 0;
@@ -35,7 +34,7 @@ public class FileReader {
         try {
             BufferedReader br = getBufferedReader(source);
             FileWriter out = new FileWriter(output, true);
-            ArrayGenerator ag = new ArrayGenerator();
+            ArraysProcessor ag = new ArraysProcessor();
             int amountOfLines = ag.getAmountOfLines(source);
             int indexToDecode = mode == DECODE_MODE ? 0 : 1;
             int indexToEncode = mode == ENCODE_MODE ? 0 : 1;
@@ -44,8 +43,8 @@ public class FileReader {
 
             String line;
 
-            Object[][] suffixesList = filterArray(array, SUFFIXES_MODE);
-            Object[][] wordsList = filterArray(array, WORDS_MODE);
+            Object[][] suffixesList = ArraysProcessor.filterArray(array, SUFFIXES_MODE);
+            Object[][] wordsList = ArraysProcessor.filterArray(array, WORDS_MODE);
             int wordsListLength = wordsList[indexToEncode].length;
             boolean previousLineEmpty = true;
 
@@ -84,7 +83,6 @@ public class FileReader {
                             }
                         }
                     } else {
-
                         boolean firstEmpty = words[DECODED_INDEX].equals("0");
                         String str = array[indexToDecode][Integer.parseInt(words[wordIndex])].toString();
                         String nextElement = array[indexToDecode][Integer.parseInt(words[(wordIndex + 1 < words.length ?
@@ -101,13 +99,7 @@ public class FileReader {
                                 String capitalized = LoggerUtil.buildWord(firstLetter, restOfTheWord);
                                 out.write(capitalized);
                             } else {
-                                boolean gotSuffix = checkForSuffix(str);
-                                if (gotSuffix) {
-                                    String suffix = splitSuffix(str);
-                                    out.write(suffix);
-                                } else {
-                                    out.write(str);
-                                }
+                                SuffixProcessor.buildSuffixString(str, out);
                                 nextNumeric = checkNumeric(nextElement);
 
                             }
@@ -176,12 +168,12 @@ public class FileReader {
     }
 
 
-    private static boolean isExactMatch(String word,
-                                        Object[][] wordsList,
-                                        int indexToEncode,
-                                        int indexToDecode,
-                                        int wordsListLength,
-                                        FileWriter out) {
+    public static boolean isExactMatch(String word,
+                                Object[][] wordsList,
+                                int indexToEncode,
+                                int indexToDecode,
+                                int wordsListLength,
+                                FileWriter out) {
         // Searches for a word in a specific list and processes it if found.
         boolean needToFind = true;
         int index = 0;
@@ -210,6 +202,21 @@ public class FileReader {
         //check if the current element is number over 10 via comparing adjacent elements
         boolean isNumber = checkNumeric(currentElement);
         return previousNumeric && isNumber;
+    }
+
+    private static boolean decodeNumbers(String partition,
+                                         Object[][] wordsList,
+                                         int indexToEncode,
+                                         int indexToDecode,
+                                         int wordsListLength,
+                                         FileWriter out) {
+        String[] numbers = BY_ELEMENT.split(partition);
+        boolean needToFind = true;
+        for (String number : numbers) {
+            needToFind = isExactMatch(number, wordsList, indexToEncode,
+                    indexToDecode, wordsListLength, out);
+        }
+        return needToFind;
     }
 
 
@@ -247,149 +254,11 @@ public class FileReader {
             }
 
             if (needToFind) {
-                processSuffixes(word, wordsList, suffixesList, indexToEncode, indexToDecode, wordsListLength, out);
+                SuffixProcessor.processSuffixes(word, wordsList, suffixesList, indexToEncode, indexToDecode, wordsListLength, out);
             }
         }
 
         return false;
-    }
-
-    private static void processSuffixes(String word,
-                                        Object[][] wordsList,
-                                        Object[][] suffixesList,
-                                        int indexToEncode,
-                                        int indexToDecode,
-                                        int wordsListLength,
-                                        FileWriter out) {
-        //Method for the processing suffixes.
-        // If no match returns -1 and sends element 0 to the string builder
-        int ZERO_ELEMENT = 0;
-        int suffixIndex = getSuffixIndex(suffixesList, word);
-        if (suffixIndex > ZERO_ELEMENT) {
-            //If matched, separate the suffix from @@,
-            // splits it with the rest of the word
-            String bareSuffix = (suffixesList[ZERO_ELEMENT][suffixIndex]).toString();
-            String cleanSuffix = splitSuffix(bareSuffix);
-            String[] wordToCheck = splitWord(word, cleanSuffix);
-            if (wordToCheck.length > ZERO_ELEMENT) {
-                boolean needToFind = isExactMatch(wordToCheck[ZERO_ELEMENT],
-                        wordsList, indexToEncode,
-                        indexToDecode, wordsListLength, out);
-
-                if (needToFind) {
-                    stringBuilder(wordsList, indexToDecode, ZERO_ELEMENT, out);
-                }
-            }
-
-            stringBuilder(suffixesList, indexToDecode, suffixIndex, out);
-        } else {
-            stringBuilder(wordsList, indexToDecode, ZERO_ELEMENT, out);
-        }
-    }
-
-
-    private static boolean decodeNumbers(String partition,
-                                         Object[][] wordsList,
-                                         int indexToEncode,
-                                         int indexToDecode,
-                                         int wordsListLength,
-                                         FileWriter out) {
-        String[] numbers = BY_ELEMENT.split(partition);
-        boolean needToFind = true;
-        for (String number : numbers) {
-            needToFind = isExactMatch(number, wordsList, indexToEncode,
-                    indexToDecode, wordsListLength, out);
-        }
-        return needToFind;
-    }
-
-
-    public static int countElementsForSeparation(Object[] elements, ArrayMode mode) {
-        //method used to count amount elements for the future filtration in arrays
-        int counter = 0;
-        for (Object row : elements) {
-            String value = row.toString();
-            boolean isSuffix = checkForSuffix(value);
-            boolean isSuffixMode = isSuffixMode(mode, isSuffix);
-            if (isSuffixMode) {
-                counter++;
-            }
-        }
-        return counter;
-    }
-
-
-    private static boolean isSuffixMode(ArrayMode mode, boolean isSuffix) {
-        return (mode == SUFFIXES_MODE) == isSuffix;
-    }
-
-
-    private static boolean checkForSuffix(String word) {
-        String prefix = String.valueOf(BY_SUFFIX);
-        return word.startsWith(prefix);
-    }
-
-
-    private static String splitSuffix(String word) {
-        return BY_SUFFIX.split(word)[1];
-    }
-
-
-    private static String[] splitWord(String word, String suffix) {
-        return word.split(suffix);
-    }
-
-
-    private static int getSuffixIndex(Object[][] suffixesList, String element) {
-        //Iterate over all suffixes and looking for the longest match
-        int suffixesLength = suffixesList[0].length;
-        int bestSuffixIndex = -1;
-        int bestSuffixLength = 0;
-
-        for (int index = 0; index < suffixesLength; index++) {
-            String bareSuffix = (suffixesList[0][index]).toString();
-            String cleanSuffix = splitSuffix(bareSuffix);
-            boolean isSuffixMatch = element.endsWith(cleanSuffix);
-            int suffixLength = cleanSuffix.length();
-
-            if (isSuffixMatch && suffixLength > bestSuffixLength) {
-                bestSuffixIndex = index;
-                bestSuffixLength = suffixLength;
-            }
-        }
-
-        return bestSuffixIndex;
-    }
-
-
-    private static Object[][] filterArray(Object[][] initialArray, ArrayMode mode) {
-        // Count the number of elements for the future array
-        int initialArrayLength = initialArray.length;
-        int rowCount = countElementsForSeparation(initialArray[0], mode);
-
-        // Create a new array with the filtered size
-        Object[][] filteredArray = new Object[initialArrayLength][rowCount];
-
-        // Populate the new array according to mode
-        int index = 0;
-        int arrayLength = initialArray[0].length;
-        for (int i = 0; i < arrayLength; i++) {
-            if (initialArray[0][i] != null) {
-                String value = initialArray[0][i].toString();
-                boolean isSuffix = checkForSuffix(value);
-
-                // Check if this element matches the mode criteria
-                boolean isSuffixes = (mode == SUFFIXES_MODE && isSuffix);
-                boolean isWords = (mode != SUFFIXES_MODE && !isSuffix);
-                if (isSuffixes || isWords) {
-                    // Copy both decoded and encoded values to maintain a relationship
-                    filteredArray[DECODED_INDEX][index] = initialArray[DECODED_INDEX][i];
-                    filteredArray[ENCODED_INDEX][index] = initialArray[ENCODED_INDEX][i];
-                    index++;
-                }
-            }
-        }
-        return filteredArray;
     }
 
 
