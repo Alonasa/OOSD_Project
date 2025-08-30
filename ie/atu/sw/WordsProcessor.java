@@ -1,21 +1,37 @@
 package ie.atu.sw;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Methods which used for the identified matches as direct, numeric,
+ * punctuation, long numbers
+ */
 public class WordsProcessor {
     private static final Pattern IS_NUMBER = Pattern.compile("\\d+");
     private static final Pattern BY_PUNCTUATION = Pattern.compile("\\p{Punct}");
     private static final Pattern BY_ELEMENT = Pattern.compile("");
     private static final Pattern WORDS_AND_PUNCTUATION = Pattern.compile("(\\w+|[-\\p{Punct}])");
 
-
+    /**
+     * Check if the current word needs to be capitalised.
+     * When the previous or next character "." or empty line or initials
+     * @param previousElement previous element
+     * @param previousEmpty is the previous element empty string
+     * @param str current string to check its length
+     * @param nextElement used to check is
+     * @return true if condition matched
+     */
     public static boolean isCapitalized(String previousElement, boolean previousEmpty, String str, String nextElement) {
         return previousElement.equals(".") || previousEmpty || str.length() == 1 && nextElement.equals(".");
     }
 
+    /**
+     * Check is the might be numeric used for a future process long numbers
+     * @param word current word
+     * @return true if an element can be converted to the number
+     */
     public static boolean checkNumeric(String word) {
         //check if string might be the number
         Matcher pattern = IS_NUMBER.matcher(word);
@@ -48,6 +64,17 @@ public class WordsProcessor {
                 || currentElement.equals("'");
     }
 
+
+    /**
+     * Check if the current element has an exact match in the words-list
+     * @param word current word
+     * @param wordsList list of elements to search in
+     * @param indexToEncode index of the array to looking for elements
+     * @param mode
+     * @param wordsListLength
+     * @param out
+     * @return
+     */
     public static boolean isExactMatch(String word,
                                        Object[][] wordsList,
                                        int indexToEncode,

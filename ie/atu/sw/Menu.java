@@ -41,7 +41,7 @@ public class Menu {
     public boolean processMenuInput(boolean keepRunning) {
         try {
             String next = scanner.next();
-            int menuItem = LoggerUtil.convertToNumber(next);
+            int menuItem = UtilMethods.convertToNumber(next);
 
             Object[][] mapItems;
             switch (menuItem) {

@@ -1,9 +1,14 @@
 package ie.atu.sw;
-import java.util.Arrays;
 
-public class LoggerUtil {
-    private LoggerUtil() {
+/**
+ * Utility class providing helper methods for string manipulation, error message handling,
+ * and conversion of strings to numbers. This class is designed for general-purpose use
+ * within other classes and contains static methods that can be accessed directly.
+ */
+public class UtilMethods {
+    private UtilMethods() {
     }
+
 
     public static String buildString(Object... args){
         StringBuilder messageString = new StringBuilder(4);
@@ -14,6 +19,7 @@ public class LoggerUtil {
         return messageString.toString().trim();
     }
 
+
     public static String buildWord(Object... args){
         StringBuilder messageString = new StringBuilder(4);
         for (Object arg: args){
@@ -23,6 +29,12 @@ public class LoggerUtil {
         return messageString.toString().trim();
     }
 
+
+    /**
+     * Create a custom error message to optimise rewriting
+     * @param format initial value of the string
+     * @param args the rest of parameters for future message
+     */
     public static void printErrorMessage(String format, Object... args) {
         StringBuilder message = new StringBuilder(format);
 
@@ -41,6 +53,12 @@ public class LoggerUtil {
         System.err.println(messageToPrint);
     }
 
+
+    /**
+     * Used as helper function in convertion string to numbers
+     * @param element which we will try to convert to integer
+     * @return integer if convertion was successful or 0
+     */
     public static int convertToNumber(String element) {
         int defaultValue = 0;
         if (element == null || element.isEmpty()) {

@@ -2,7 +2,6 @@ package ie.atu.sw;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Arrays;
 
 public class ArraysProcessor {
     private static final int DECODED_INDEX = 0;
@@ -17,7 +16,7 @@ public class ArraysProcessor {
             array = createArray(br, sizes);
             return array;
         } catch (IOException e) {
-            LoggerUtil.printErrorMessage("I/O Error Occur");
+            UtilMethods.printErrorMessage("I/O Error Occur");
         }
 
         return array;
@@ -42,7 +41,7 @@ public class ArraysProcessor {
             }
             return amountOfElements;
         } catch (IOException e) {
-            LoggerUtil.printErrorMessage("Error occurred: ", e);
+            UtilMethods.printErrorMessage("Error occurred: ", e);
         }
 
         return amountOfElements;
@@ -57,7 +56,7 @@ public class ArraysProcessor {
             }
             return amountOfLines;
         } catch (IOException e) {
-            LoggerUtil.printErrorMessage("Error: ", e);
+            UtilMethods.printErrorMessage("Error: ", e);
         }
         return amountOfLines;
     }
@@ -77,7 +76,7 @@ public class ArraysProcessor {
                 i++;
             }
         } catch (IOException e) {
-            LoggerUtil.printErrorMessage("I/O Error");
+            UtilMethods.printErrorMessage("I/O Error");
         }
         return elementsToEncode;
     }

@@ -4,6 +4,10 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Locale;
 
+/**
+ * Implement encoding and decoding methods which used over
+ * words processing. Methods are called by File reader method
+ */
 public class CipherProcessor {
     private static final ArrayMode ENCODE_MODE = ArrayMode.ENCODE;
     private static final int DECODED_INDEX = 0;
@@ -19,11 +23,12 @@ public class CipherProcessor {
      * Decode data from the provided array and save it to a file via BufferedWriter.
      * The method processes the words in decoded mode via match-by-word index in the array
      * if the match didn't find, set it to the default value which is located on index 0
-     * @param words array of words from read line
-     * @param array array of to process the indexes
-     * @param indexToDecode index by which we get an element from the array
-     * @param wordIndex index of the current word
-     * @param out output file
+     *
+     * @param words             array of words from read line
+     * @param array             array of to process the indexes
+     * @param indexToDecode     index by which we get an element from the array
+     * @param wordIndex         index of the current word
+     * @param out               output file
      * @param previousLineEmpty flag used to make first words capital if there is an empty line preceded
      * @throws IOException throws IO exception if something went wrong with bufferedWriter
      */
@@ -47,7 +52,7 @@ public class CipherProcessor {
             if (WordsProcessor.isCapitalized(previousElement, previousLineEmpty, str, nextElement)) {
                 String firstLetter = str.substring(0, 1).toUpperCase(Locale.ROOT);
                 String restOfTheWord = str.substring(1);
-                String capitalized = LoggerUtil.buildWord(firstLetter, restOfTheWord);
+                String capitalized = UtilMethods.buildWord(firstLetter, restOfTheWord);
                 out.write(capitalized);
             } else {
                 SuffixProcessor.buildSuffixString(str, out);
@@ -70,11 +75,11 @@ public class CipherProcessor {
      * The method processes the words based on the given mode and performs encoding operations
      * while handling exact matches and words with punctuation.
      *
-     * @param array 2D array containing objects for encoding
-     * @param words An array of strings representing the words from a line
+     * @param array     2D array containing objects for encoding
+     * @param words     An array of strings representing the words from a line
      * @param wordIndex The index of the current word
-     * @param mode The mode in which the encoding should operate
-     * @param out A BufferedWriter to write the results
+     * @param mode      The mode in which the encoding should operate
+     * @param out       A BufferedWriter to write the results
      */
     public static void encode(Object[][] array, String[] words, int wordIndex, ArrayMode mode, BufferedWriter out) {
         int index = 0;
@@ -109,7 +114,8 @@ public class CipherProcessor {
 
     /**
      * Get an index of an array to work with
-     * @param mode current mode
+     *
+     * @param mode     current mode
      * @param isDecode is decoded mode now
      * @return integer index of an array with which we will work
      */
@@ -119,7 +125,8 @@ public class CipherProcessor {
 
     /**
      * Check if any of default modes selected
-     * @param mode selected mode
+     *
+     * @param mode     selected mode
      * @param isDecode check is decode mode now
      * @return if mode match return true
      */

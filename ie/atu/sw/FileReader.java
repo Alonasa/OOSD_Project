@@ -57,7 +57,7 @@ public class FileReader {
             System.out.println("Successfully decoded file");
 
         } catch (IOException e) {
-            LoggerUtil.printErrorMessage("I/O Error on decoding: ", e);
+            UtilMethods.printErrorMessage("I/O Error on decoding: ", e);
         }
     }
 
@@ -77,7 +77,7 @@ public class FileReader {
             out.write(str);
             out.write(",");
         } catch (IOException e) {
-            LoggerUtil.printErrorMessage("Error writing to output file: ", e);
+            UtilMethods.printErrorMessage("Error writing to output file: ", e);
         }
     }
 
@@ -91,7 +91,7 @@ public class FileReader {
             out.write(magicNumber);
             out.write(",");
         } catch (IOException e) {
-            LoggerUtil.printErrorMessage("Error writing ' ' to file: ", e);
+            UtilMethods.printErrorMessage("Error writing ' ' to file: ", e);
         }
     }
 
@@ -109,8 +109,8 @@ public class FileReader {
             result = new BufferedReader(new InputStreamReader(
                     new FileInputStream(source), StandardCharsets.UTF_8), 8192);
         } catch (FileNotFoundException e) {
-            String errorMessage = LoggerUtil.buildString("File not found: ", source);
-            LoggerUtil.printErrorMessage(errorMessage, e);
+            String errorMessage = UtilMethods.buildString("File not found: ", source);
+            UtilMethods.printErrorMessage(errorMessage, e);
         }
         return result;
     }
