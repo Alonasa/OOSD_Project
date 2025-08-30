@@ -37,7 +37,6 @@ public class SuffixProcessor {
             String cleanSuffix = splitSuffix(bareSuffix);
             String[] wordToCheck = splitWord(word, cleanSuffix);
             if (wordToCheck.length > ZERO_ELEMENT) {
-                System.out.println(wordToCheck[0].toString());
                 boolean needToFind = WordsProcessor.isExactMatch(wordToCheck[ZERO_ELEMENT],
                         wordsList, indexToEncode,
                         mode, wordsListLength, out);

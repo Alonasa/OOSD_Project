@@ -42,6 +42,7 @@ public class WordsProcessor {
                 || (!nextElement.equals("[???]") && matchedByPunctuation && !nextElement.equals("("))
                 || currentElement.equals("(")
                 || currentElement.equals("-")
+                || checkNumeric(currentElement) && checkNumeric(nextElement)
                 || (currentElement.equals(":") && checkNumeric(nextElement))
                 || currentElement.equals("'");
     }
@@ -136,7 +137,7 @@ public class WordsProcessor {
         int indexToEncode = CipherProcessor.getArrayIndex(mode, isDecode);
         //build the result array of elements which have punctuation inside
         String[] withPunctuation = getElementsWithPunctuation(word);
-        int wordsListLength = wordsList.length;
+        int wordsListLength = wordsList[indexToEncode].length;
 
         if (withPunctuation.length == 0) {
             FileReader.stringBuilder(wordsList, mode, startIndex, out);
