@@ -21,16 +21,8 @@ public class FileReader {
     private static final ArrayMode WORDS_MODE = ArrayMode.WORDS;
     //ArrayIndexes
     private static final int DECODED_INDEX = 0;
-    private static final int ENCODED_INDEX = 1;
 
-
-    public static void decode(String source, Object[][] array, ArrayMode mode) {
-        String outputLocation = mode == ENCODE_MODE ? "./out.txt" : "./out-decoded.txt";
-        decode(source, outputLocation, array, mode);
-    }
-
-
-    public static void decode(String source, String output, Object[][] array, ArrayMode mode) {
+    public static void processFile(String source, String output, Object[][] array, ArrayMode mode) {
         try {
             BufferedReader br = getBufferedReader(source);
             FileWriter out = new FileWriter(output, true);
