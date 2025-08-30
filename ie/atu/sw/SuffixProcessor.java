@@ -23,7 +23,7 @@ public class SuffixProcessor {
                                         Object[][] wordsList,
                                         Object[][] suffixesList,
                                         int indexToEncode,
-                                        int indexToDecode,
+                                        ArrayMode mode,
                                         int wordsListLength,
                                         FileWriter out) {
         //Method for the processing suffixes.
@@ -37,18 +37,19 @@ public class SuffixProcessor {
             String cleanSuffix = splitSuffix(bareSuffix);
             String[] wordToCheck = splitWord(word, cleanSuffix);
             if (wordToCheck.length > ZERO_ELEMENT) {
-                boolean needToFind = FileReader.isExactMatch(wordToCheck[ZERO_ELEMENT],
+                System.out.println(wordToCheck[0].toString());
+                boolean needToFind = WordsProcessor.isExactMatch(wordToCheck[ZERO_ELEMENT],
                         wordsList, indexToEncode,
-                        indexToDecode, wordsListLength, out);
+                        mode, wordsListLength, out);
 
                 if (needToFind) {
-                    FileReader.stringBuilder(wordsList, indexToDecode, ZERO_ELEMENT, out);
+                    FileReader.stringBuilder(wordsList, mode, ZERO_ELEMENT, out);
                 }
             }
 
-            FileReader.stringBuilder(suffixesList, indexToDecode, suffixIndex, out);
+            FileReader.stringBuilder(suffixesList, mode, suffixIndex, out);
         } else {
-            FileReader.stringBuilder(wordsList, indexToDecode, ZERO_ELEMENT, out);
+            FileReader.stringBuilder(wordsList, ArrayMode.DECODE, ZERO_ELEMENT, out);
         }
     }
 

@@ -65,7 +65,7 @@ public class Menu {
                     }
                     mapItems = ag.getArray(mapFileLocation);
                     if (outputFileLocation.isEmpty()) {
-                        Decoder.decode(inputFileLocation, mapItems, ENCODE_MODE);
+                        CipherProcessor.decode(inputFileLocation, mapItems, ENCODE_MODE);
                     } else {
                         FileReader.processFile(inputFileLocation, outputFileLocation, mapItems, ENCODE_MODE);
                     }
@@ -80,7 +80,7 @@ public class Menu {
                         out.println("No input file specified");
                     }
                     mapItems = ag.getArray(mapFileLocation);
-                    Decoder.decode("./out.txt", mapItems, DECODE_MODE);
+                    CipherProcessor.decode("./out.txt", mapItems, DECODE_MODE);
                 }
                 case 6 -> {
                     out.println("Goodbye! 6");
