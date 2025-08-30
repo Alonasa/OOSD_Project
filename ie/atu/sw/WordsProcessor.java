@@ -1,5 +1,6 @@
 package ie.atu.sw;
 
+import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,7 +53,7 @@ public class WordsProcessor {
                                        int indexToEncode,
                                        ArrayMode mode,
                                        int wordsListLength,
-                                       FileWriter out) {
+                                       BufferedWriter out) {
         // Searches for a word in a specific list and processes it if found.
         boolean needToFind = true;
         int index = 0;
@@ -73,20 +74,21 @@ public class WordsProcessor {
     /**
      * Take the long number, separate it on the parts and encode
      * return true when encoding attempt fault
-     * @param partition part of the word which considered to be the number
-     * @param wordsList array of the words where we need to find a number
-     * @param indexToEncode index of the row in which we take the element to compare
-     * @param mode mode encode or decode
+     *
+     * @param partition       part of the word which considered to be the number
+     * @param wordsList       array of the words where we need to find a number
+     * @param indexToEncode   index of the row in which we take the element to compare
+     * @param mode            mode encode or decode
      * @param wordsListLength length of the word list to iterate over
-     * @param out file in which the program will write the index of the found number
+     * @param out             file in which the program will write the index of the found number
      * @return boolean value that reflects if you still need to find value
      */
     public static boolean isNumbersdecoded(String partition,
-                                            Object[][] wordsList,
-                                            int indexToEncode,
-                                            ArrayMode mode,
-                                            int wordsListLength,
-                                            FileWriter out) {
+                                           Object[][] wordsList,
+                                           int indexToEncode,
+                                           ArrayMode mode,
+                                           int wordsListLength,
+                                           BufferedWriter out) {
         String[] numbers = BY_ELEMENT.split(partition);
         boolean needToFind = true;
         for (String number : numbers) {
@@ -98,8 +100,11 @@ public class WordsProcessor {
 
 
     /**
-     * @param element
-     * @return
+     * get elements with punctuation
+     * and separate them by word and punctuation
+     *
+     * @param element string which might have punctuation init
+     * @return array of strings or Zero length array
      */
     private static String[] getElementsWithPunctuation(String element) {
         Matcher matcher = WORDS_AND_PUNCTUATION.matcher(element);
@@ -120,19 +125,19 @@ public class WordsProcessor {
 
 
     /**
-     * @param word word to process
-     * @param wordsList words list for future match search
+     * @param word         word to process
+     * @param wordsList    words list for future match search
      * @param suffixesList suffixes list
-     * @param out file for the output
+     * @param out          file for the output
      * @param startIndex
-     * @param mode encode or decode
+     * @param mode         encode or decode
      * @return false if no need to look for the elements in this list
      */
     public static boolean processWordsWithPunctuation(String word,
-                                                       Object[][] wordsList,
-                                                       Object[][] suffixesList,
-                                                       FileWriter out,
-                                                       int startIndex, ArrayMode mode) {
+                                                      Object[][] wordsList,
+                                                      Object[][] suffixesList,
+                                                      BufferedWriter out,
+                                                      int startIndex, ArrayMode mode) {
         boolean isDecode = mode == ArrayMode.DECODE;
         int indexToEncode = CipherProcessor.getArrayIndex(mode, isDecode);
         //build the result array of elements which have punctuation inside
@@ -162,7 +167,6 @@ public class WordsProcessor {
             }
 
             if (needToFind) {
-                System.out.println(partition);
                 SuffixProcessor.processSuffixes(partition, wordsList, suffixesList, indexToEncode, mode, wordsListLength,
                         out);
             }

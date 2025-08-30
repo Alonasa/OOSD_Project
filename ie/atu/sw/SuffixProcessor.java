@@ -1,5 +1,6 @@
 package ie.atu.sw;
 
+import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.regex.Pattern;
@@ -8,7 +9,7 @@ import java.util.regex.Pattern;
 public class SuffixProcessor {
     private static final Pattern BY_SUFFIX = Pattern.compile("@@");
 
-    public static void buildSuffixString(String str, FileWriter out) throws IOException {
+    public static void buildSuffixString(String str, BufferedWriter out) throws IOException {
         boolean gotSuffix = checkForSuffix(str);
         if (gotSuffix) {
             String suffix = splitSuffix(str);
@@ -25,7 +26,7 @@ public class SuffixProcessor {
                                         int indexToEncode,
                                         ArrayMode mode,
                                         int wordsListLength,
-                                        FileWriter out) {
+                                        BufferedWriter out) {
         //Method for the processing suffixes.
         // If no match returns -1 and sends element 0 to the string builder
         int ZERO_ELEMENT = 0;
@@ -48,7 +49,7 @@ public class SuffixProcessor {
 
             FileReader.stringBuilder(suffixesList, mode, suffixIndex, out);
         } else {
-            FileReader.stringBuilder(wordsList, ArrayMode.DECODE, ZERO_ELEMENT, out);
+            FileReader.stringBuilder(wordsList, mode, ZERO_ELEMENT, out);
         }
     }
 

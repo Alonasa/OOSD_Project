@@ -42,16 +42,17 @@ public class LoggerUtil {
     }
 
     public static int convertToNumber(String element) {
+        int defaultValue = 0;
         if (element == null || element.isEmpty()) {
             printErrorMessage("Invalid input: null or empty string. Returning default value 0.");
-            return 0; // Default fallback value
+            return defaultValue; // Default fallback value
         }
 
         try {
             return Integer.parseInt(element);
         } catch (NumberFormatException e) {
             printErrorMessage("Unable to parse '%s' as an integer. Returning default value 0.", element);
-            return 0; // Default fallback value
+            return defaultValue; // Default fallback value
         }
 
     }

@@ -24,12 +24,6 @@ public class ArraysProcessor {
     }
 
 
-    public static void printArray(Object[][] array) {
-        String arrayToPrint = Arrays.deepToString(array);
-        System.out.println(arrayToPrint);
-    }
-
-
     private static int[] getArrayLength(int amountOfElements) {
         int arrayLength = 2;
         int[] sizes = new int[arrayLength];
@@ -53,6 +47,7 @@ public class ArraysProcessor {
 
         return amountOfElements;
     }
+
 
     public int getAmountOfLines(String source) {
         int amountOfLines = 0;
@@ -88,7 +83,7 @@ public class ArraysProcessor {
     }
 
 
-    public static Object[][] filterArray(Object[][] initialArray, ArrayMode mode) {
+    public static Object[][] getArrayPartition(Object[][] initialArray, ArrayMode mode) {
         // Count the number of elements for the future array
         int initialArrayLength = initialArray.length;
         int rowCount = countElementsForSeparation(initialArray[0], mode);
@@ -117,6 +112,7 @@ public class ArraysProcessor {
         }
         return filteredArray;
     }
+
 
     public static int countElementsForSeparation(Object[] elements, ArrayMode mode) {
         //method used to count amount elements for the future filtration in arrays
