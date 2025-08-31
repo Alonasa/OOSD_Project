@@ -34,7 +34,7 @@ public class FileReader {
     public static void processFile(String source, String output, Object[][] array, ArrayMode mode) {
         try {
             BufferedReader br = getBufferedReader(source);
-            BufferedWriter out = new BufferedWriter(new FileWriter(output, true), 8192);
+            BufferedWriter out = new BufferedWriter(new FileWriter(output), 8192);
             int amountOfLines = getAmountOfLines(source);
             int linesProcessed = 0;
             boolean isEncodeMode = mode == ENCODE_MODE;
