@@ -1,6 +1,8 @@
 package ie.atu.sw;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
+
 import static java.lang.System.in;
 import static java.lang.System.out;
 
@@ -11,47 +13,51 @@ public class Menu {
     private static final ArrayMode DECODE_MODE = ArrayMode.DECODE;
     private static final String DEFAULT_FILE_LOCATION = "./out.txt";
 
+    private static String mapFileLocation = "";
+    private static String inputFileLocation = "";
+    private static String outputFileLocation = "";
 
-    String mapFileLocation = "./encodings-10000/encodings-10000.csv";
-    String inputFileLocation = "./textfiles/BibleGod.txt";
-    String outputFileLocation = "";
+
     public Menu() {
         scanner = new Scanner(in, StandardCharsets.UTF_8);
     }
 
     /**
-     *
      * @param keepRunning identify if the user still wants to work with the program
      * @return while return true, we see the menu and got an offer to make an input
      */
     public boolean processMenuInput(boolean keepRunning) {
+
         try {
             String next = scanner.next();
             int menuItem = UtilMethods.convertToNumber(next);
-            String logMessage = "";
 
             Object[][] mapItems;
             switch (menuItem) {
                 case 1 -> {
-                    out.println("Please enter the location of the mapping file");
-                    logMessage = UtilMethods.buildString("Mapping file location:", mapFileLocation);
-                    out.println(logMessage);
+                    mapFileLocation = getFileLocationFromUser("Please enter the location of the mapping file",
+                            "Mapping");
                 }
                 case 2 -> {
-                    out.println("Please enter the location of the input file");
+                    inputFileLocation = getFileLocationFromUser("Please enter the location of the input file",
+                            "Input");
                 }
                 case 3 -> {
-                    out.println("Please enter the location of the output file");
+                    outputFileLocation = getFileLocationFromUser("Please enter the location of the output file",
+                            "Output");
                 }
                 case 4 -> {
                     isEmptyFileLocations(mapFileLocation, inputFileLocation);
-                    out.println("Begin Encoding");
-
                     mapItems = ArraysProcessor.getArray(mapFileLocation);
-                    if (outputFileLocation.isEmpty()) {
-                        CipherProcessor.decode(inputFileLocation, mapItems, ENCODE_MODE);
+                    if (!mapFileLocation.isEmpty() && !inputFileLocation.isEmpty()) {
+                        out.println("Begin Encoding");
+                        if (outputFileLocation.isEmpty()) {
+                            CipherProcessor.decode(inputFileLocation, mapItems, ENCODE_MODE);
+                        } else {
+                            FileReader.processFile(inputFileLocation, outputFileLocation, mapItems, ENCODE_MODE);
+                        }
                     } else {
-                        FileReader.processFile(inputFileLocation, outputFileLocation, mapItems, ENCODE_MODE);
+                        UtilMethods.printErrorMessage("Map file location or input file location isn't specified");
                     }
                 }
                 case 5 -> {
@@ -76,12 +82,27 @@ public class Menu {
 
 
     /**
+     * @param fileType Type of file for
+     * @return The file location got from user
+     */
+    private String getFileLocationFromUser(String promptMessage, String fileType) {
+        out.println(promptMessage);
+        scanner.nextLine(); // Consume the newline character
+        String fileLocation = scanner.nextLine();
+        String logMessage = UtilMethods.buildString(fileType, " file location:", fileLocation);
+        out.println(logMessage);
+        return fileLocation;
+    }
+
+
+    /**
      * Checks if passing empty file location and print message
-     * @param mapFileLocation location of mapFile
+     *
+     * @param mapFileLocation   location of mapFile
      * @param inputFileLocation location of an input file
      * @return true if something isn't specified
      */
-    private static boolean isEmptyFileLocations (String mapFileLocation, String inputFileLocation){
+    private static boolean isEmptyFileLocations(String mapFileLocation, String inputFileLocation) {
         boolean isNoFile = false;
         String logMessage;
         if (mapFileLocation.isEmpty()) {
