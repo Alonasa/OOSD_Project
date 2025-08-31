@@ -1,11 +1,16 @@
 package ie.atu.sw;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
-
+/**
+ * The SuffixProcessor class provides utility methods for processing
+ * and handling suffix-related operations on strings.
+ * This includes functionalities such as identifying suffixes,
+ * splitting words by suffixes, and processing suffixes in
+ * conjunction with word lists and modes.
+ */
 public class SuffixProcessor {
     private static final Pattern BY_SUFFIX = Pattern.compile("@@");
 
@@ -19,14 +24,24 @@ public class SuffixProcessor {
         }
     }
 
-
+    /**
+     * Processes suffixes for a given word by matching it against a suffix
+     *
+     * @param word            the word to process, for future suffixes check
+     * @param wordsList       a 2D array containing words
+     * @param suffixesList    a 2D array containing suffixes
+     * @param indexToEncode   the index to encode in wordsList
+     * @param mode            the processing mode encoding or decoding
+     * @param wordsListLength the total number of entries in wordsList
+     * @param out             the file to save a result
+     */
     public static void processSuffixes(String word,
-                                        Object[][] wordsList,
-                                        Object[][] suffixesList,
-                                        int indexToEncode,
-                                        ArrayMode mode,
-                                        int wordsListLength,
-                                        BufferedWriter out) {
+                                       Object[][] wordsList,
+                                       Object[][] suffixesList,
+                                       int indexToEncode,
+                                       ArrayMode mode,
+                                       int wordsListLength,
+                                       BufferedWriter out) {
         //Method for the processing suffixes.
         // If no match returns -1 and sends element 0 to the string builder
         int ZERO_ELEMENT = 0;
@@ -53,23 +68,48 @@ public class SuffixProcessor {
         }
     }
 
-
+    /**
+     * Splits the given word into an array of substrings
+     *
+     * @param word   the word to be split
+     * @param suffix the delimiter used to split the word
+     * @return an array of substrings resulting from splitting the word
+     */
     private static String[] splitWord(String word, String suffix) {
         return word.split(suffix);
     }
 
 
+    /**
+     * Checks if a word has a valid suffix in it
+     *
+     * @param word to check
+     * @return true in case if it has suffix in it or false
+     */
     public static boolean checkForSuffix(String word) {
         String prefix = String.valueOf(BY_SUFFIX);
         return word.startsWith(prefix);
     }
 
-
+    /**
+     * Split word by matched suffix and return suffix for
+     * the string building
+     *
+     * @param word word for future splitting
+     * @return current suffix
+     */
     private static String splitSuffix(String word) {
         return BY_SUFFIX.split(word)[1];
     }
 
 
+    /**
+     * Get index of the current suffix in a suffixes-list
+     *
+     * @param suffixesList list of suffixes
+     * @param element      current element to process
+     * @return suffix index or -1 in case if it not in the list
+     */
     static int getSuffixIndex(Object[][] suffixesList, String element) {
         //Iterate over all suffixes and looking for the longest match
         int suffixesLength = suffixesList[0].length;
@@ -90,5 +130,4 @@ public class SuffixProcessor {
 
         return bestSuffixIndex;
     }
-
 }

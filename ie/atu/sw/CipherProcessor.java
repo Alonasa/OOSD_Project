@@ -11,7 +11,6 @@ import java.util.Locale;
 public class CipherProcessor {
     private static final ArrayMode ENCODE_MODE = ArrayMode.ENCODE;
     private static final int DECODED_INDEX = 0;
-    private static final ArrayMode WORDS_MODE = ArrayMode.WORDS;
 
 
     public static void decode(String source, Object[][] array, ArrayMode mode) {
@@ -26,18 +25,20 @@ public class CipherProcessor {
      *
      * @param words             array of words from read line
      * @param array             array of to process the indexes
-     * @param indexToDecode     index by which we get an element from the array
      * @param wordIndex         index of the current word
+     * @param mode              The mode in which the encoding should operate
      * @param out               output file
      * @param previousLineEmpty flag used to make first words capital if there is an empty line preceded
      * @throws IOException throws IO exception if something went wrong with bufferedWriter
      */
 
-    public static void decode(String[] words, Object[][] array, int indexToDecode, int wordIndex,
-                              BufferedWriter out, boolean previousLineEmpty) throws IOException {
+    public static void decode(String[] words, Object[][] array, int wordIndex,
+                              ArrayMode mode, BufferedWriter out, boolean previousLineEmpty) throws IOException {
         int wordsLength = words.length;
         boolean nextNumeric = false;
         boolean firstEmpty = words[DECODED_INDEX].equals("0") || words[DECODED_INDEX].equals(" ");
+        int indexToDecode = getArrayIndex(mode, true);
+
 
         String str = array[indexToDecode][Integer.parseInt(words[wordIndex])].toString();
 
@@ -75,18 +76,18 @@ public class CipherProcessor {
      * The method processes the words based on the given mode and performs encoding operations
      * while handling exact matches and words with punctuation.
      *
-     * @param array     2D array containing objects for encoding
-     * @param words     An array of strings representing the words from a line
-     * @param wordIndex The index of the current word
-     * @param mode      The mode in which the encoding should operate
-     * @param out       A BufferedWriter to write the results
+     * @param words        An array of strings representing the words from a line
+     * @param wordsList    2D array containing objects for encoding
+     * @param suffixesList 2D array containing suffixes for encoding
+     * @param wordIndex    The index of the current word
+     * @param mode         The mode in which the encoding should operate
+     * @param out          A BufferedWriter to write the results
      */
-    public static void encode(Object[][] array, String[] words, int wordIndex, ArrayMode mode, BufferedWriter out) {
-        int index = 0;
-        Object[][] wordsList = ArraysProcessor.getArrayPartition(array, WORDS_MODE);
-        Object[][] suffixesList = ArraysProcessor.getArrayPartition(array, FileReader.SUFFIXES_MODE);
-
-        int indexToEncode = 0;
+    public static void encode(String[] words, Object[][] wordsList, Object[][] suffixesList, int wordIndex,
+                              ArrayMode mode,
+                              BufferedWriter out) {
+        int defaultIndex = 0;
+        int indexToEncode = getArrayIndex(mode, false);
 
         int wordsListLength = wordsList[indexToEncode].length;
 
@@ -105,7 +106,7 @@ public class CipherProcessor {
                 // If no exact match found, process words with punctuation
                 if (needToFind) {
                     needToFind = WordsProcessor.processWordsWithPunctuation(words[wordIndex], wordsList,
-                            suffixesList, out, index, mode);
+                            suffixesList, out, defaultIndex, mode);
                 }
 
             }

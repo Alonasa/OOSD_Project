@@ -9,8 +9,98 @@ public class Menu {
     private final Scanner scanner;
     private static final ArrayMode ENCODE_MODE = ArrayMode.ENCODE;
     private static final ArrayMode DECODE_MODE = ArrayMode.DECODE;
+    private static final String DEFAULT_FILE_LOCATION = "./out.txt";
 
 
+    String mapFileLocation = "./encodings-10000/encodings-10000.csv";
+    String inputFileLocation = "./textfiles/BibleGod.txt";
+    String outputFileLocation = "";
+    public Menu() {
+        scanner = new Scanner(in, StandardCharsets.UTF_8);
+    }
+
+    /**
+     *
+     * @param keepRunning identify if the user still wants to work with the program
+     * @return while return true, we see the menu and got an offer to make an input
+     */
+    public boolean processMenuInput(boolean keepRunning) {
+        try {
+            String next = scanner.next();
+            int menuItem = UtilMethods.convertToNumber(next);
+            String logMessage = "";
+
+            Object[][] mapItems;
+            switch (menuItem) {
+                case 1 -> {
+                    out.println("Please enter the location of the mapping file");
+                    logMessage = UtilMethods.buildString("Mapping file location:", mapFileLocation);
+                    out.println(logMessage);
+                }
+                case 2 -> {
+                    out.println("Please enter the location of the input file");
+                }
+                case 3 -> {
+                    out.println("Please enter the location of the output file");
+                }
+                case 4 -> {
+                    isEmptyFileLocations(mapFileLocation, inputFileLocation);
+                    out.println("Begin Encoding");
+
+                    mapItems = ArraysProcessor.getArray(mapFileLocation);
+                    if (outputFileLocation.isEmpty()) {
+                        CipherProcessor.decode(inputFileLocation, mapItems, ENCODE_MODE);
+                    } else {
+                        FileReader.processFile(inputFileLocation, outputFileLocation, mapItems, ENCODE_MODE);
+                    }
+                }
+                case 5 -> {
+                    out.println("Begin Decoding");
+
+                    mapItems = ArraysProcessor.getArray(mapFileLocation);
+                    CipherProcessor.decode(DEFAULT_FILE_LOCATION, mapItems, DECODE_MODE);
+                }
+                case 6 -> {
+                    out.println("Goodbye! 6");
+                    keepRunning = false;
+                }
+                default -> {
+                    out.println("Invalid Option Selected");
+                }
+            }
+        } catch (NumberFormatException e) {
+            UtilMethods.printErrorMessage("Invalid array Index: ", e);
+        }
+        return keepRunning;
+    }
+
+
+    /**
+     * Checks if passing empty file location and print message
+     * @param mapFileLocation location of mapFile
+     * @param inputFileLocation location of an input file
+     * @return true if something isn't specified
+     */
+    private static boolean isEmptyFileLocations (String mapFileLocation, String inputFileLocation){
+        boolean isNoFile = false;
+        String logMessage;
+        if (mapFileLocation.isEmpty()) {
+            logMessage = UtilMethods.buildString("No mapping file specified");
+            out.println(logMessage);
+            isNoFile = true;
+        }
+        if (inputFileLocation.isEmpty()) {
+            out.println("No input file specified");
+            isNoFile = true;
+        }
+
+        return isNoFile;
+    }
+
+
+    /**
+     * The render menu method is taken from the Stubs file
+     */
     public void renderMenu() {
         out.println(ConsoleColour.BLUE);
         out.println("************************************************************");
@@ -28,71 +118,5 @@ public class Menu {
         out.print(ConsoleColour.BLACK_BOLD_BRIGHT);
         out.println();
         out.print("Select Option [1-6]>: ");
-    }
-
-    String mapFileLocation = "./encodings-10000/encodings-10000.csv";
-    String inputFileLocation = "./textfiles/BibleGod.txt";
-    String outputFileLocation = "";
-
-    public Menu() {
-        scanner = new Scanner(in, StandardCharsets.UTF_8);
-    }
-
-    public boolean processMenuInput(boolean keepRunning) {
-        try {
-            String next = scanner.next();
-            int menuItem = UtilMethods.convertToNumber(next);
-
-            Object[][] mapItems;
-            switch (menuItem) {
-                case 1 -> {
-                    out.println("Please enter the location of the mapping file");
-                }
-                case 2 -> {
-                    out.println("Please enter the location of the input file");
-                }
-                case 3 -> {
-                    out.println("Please enter the location of the output file");
-                }
-                case 4 -> {
-                    out.println("Begin Encoding");
-                    out.println("Mapping file location: " + mapFileLocation);
-                    if (mapFileLocation.isEmpty()) {
-                        out.println("No mapping file specified");
-                    }
-                    if (inputFileLocation.isEmpty()) {
-                        out.println("No input file specified");
-                    }
-                    mapItems = ag.getArray(mapFileLocation);
-                    if (outputFileLocation.isEmpty()) {
-                        CipherProcessor.decode(inputFileLocation, mapItems, ENCODE_MODE);
-                    } else {
-                        FileReader.processFile(inputFileLocation, outputFileLocation, mapItems, ENCODE_MODE);
-                    }
-                }
-                case 5 -> {
-                    out.println("Begin Decoding");
-                    out.println("Mapping file location: " + mapFileLocation);
-                    if (mapFileLocation.isEmpty()) {
-                        out.println("No mapping file specified");
-                    }
-                    if (inputFileLocation.isEmpty()) {
-                        out.println("No input file specified");
-                    }
-                    mapItems = ag.getArray(mapFileLocation);
-                    CipherProcessor.decode("./out.txt", mapItems, DECODE_MODE);
-                }
-                case 6 -> {
-                    out.println("Goodbye! 6");
-                    keepRunning = false;
-                }
-                default -> {
-                    out.println("Invalid Option Selected");
-                }
-            }
-        } catch (NumberFormatException e) {
-            System.err.println("Invalid number. Please make sure that numbers in range 1-6");
-        }
-        return keepRunning;
     }
 }

@@ -1,5 +1,8 @@
 package ie.atu.sw;
 
+/**
+ * The ProgressBar class taken from the stubs
+ */
 public class ProgressBar {
 
     /*

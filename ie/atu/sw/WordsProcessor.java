@@ -5,7 +5,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Methods which used for the identified matches as direct, numeric,
+ * WordsProcessor class responsible for the word processing.
+ * Have methods which are used for the identified matches as direct, numeric,
  * punctuation, long numbers
  */
 public class WordsProcessor {
@@ -17,11 +18,12 @@ public class WordsProcessor {
     /**
      * Check if the current word needs to be capitalised.
      * When the previous or next character "." or empty line or initials
+     *
      * @param previousElement previous element
-     * @param previousEmpty is the previous element empty string
-     * @param str current string to check its length
-     * @param nextElement used to check is
-     * @return true if condition matched
+     * @param previousEmpty   is the previous element empty string
+     * @param str             current string to check its length
+     * @param nextElement     used to check is
+     * @return true if the condition matched
      */
     public static boolean isCapitalized(String previousElement, boolean previousEmpty, String str, String nextElement) {
         return previousElement.equals(".") || previousEmpty || str.length() == 1 && nextElement.equals(".");
@@ -29,6 +31,7 @@ public class WordsProcessor {
 
     /**
      * Check is the might be numeric used for a future process long numbers
+     *
      * @param word current word
      * @return true if an element can be converted to the number
      */
@@ -38,14 +41,27 @@ public class WordsProcessor {
         return pattern.matches();
     }
 
-
+    /**
+     * Checking if the number bigger than 9 via traversing over each item
+     *
+     * @param previousNumeric the flag that identifies if a previous element was number
+     * @param currentElement  element to check
+     * @return true if yes
+     */
     public static boolean checkLongNumber(boolean previousNumeric, String currentElement) {
         //check if the current element is number over 10 via comparing adjacent elements
         boolean isNumber = checkNumeric(currentElement);
         return previousNumeric && isNumber;
     }
 
-
+    /**
+     * Used to check if the current element has punctuation in it
+     *
+     * @param isLongNumber   if element long number used for dates ranges
+     * @param nextElement    next element to check
+     * @param currentElement element to compare with
+     * @return true if got match
+     */
     public static boolean isPunctuation(boolean isLongNumber, String nextElement, String currentElement) {
         Matcher matcher = BY_PUNCTUATION.matcher(nextElement);
         boolean matchedByPunctuation = matcher.find();
@@ -54,6 +70,16 @@ public class WordsProcessor {
     }
 
 
+    /**
+     * Method used to identify punctuation match used in both
+     * encoding and decoding
+     *
+     * @param isLongNumber         long number flag
+     * @param nextElement          to compare
+     * @param currentElement       current element
+     * @param matchedByPunctuation true or false
+     * @return true if got match
+     */
     private static boolean isPunctuationMatch(boolean isLongNumber, String nextElement, String currentElement, boolean matchedByPunctuation) {
         return isLongNumber
                 || (!nextElement.equals("[???]") && matchedByPunctuation && !nextElement.equals("("))
@@ -67,13 +93,14 @@ public class WordsProcessor {
 
     /**
      * Check if the current element has an exact match in the words-list
-     * @param word current word
-     * @param wordsList list of elements to search in
-     * @param indexToEncode index of the array to looking for elements
-     * @param mode
-     * @param wordsListLength
-     * @param out
-     * @return
+     *
+     * @param word            current word
+     * @param wordsList       list of elements to search in
+     * @param indexToEncode   index of the array to looking for elements
+     * @param mode            current mode
+     * @param wordsListLength length of words list
+     * @param out             output file
+     * @return if found exact match return true
      */
     public static boolean isExactMatch(String word,
                                        Object[][] wordsList,
@@ -107,7 +134,7 @@ public class WordsProcessor {
      * @param indexToEncode   index of the row in which we take the element to compare
      * @param mode            mode encode or decode
      * @param wordsListLength length of the word list to iterate over
-     * @param out             file in which the program will write the index of the found number
+     * @param out             file for the output
      * @return boolean value that reflects if you still need to find value
      */
     public static boolean isNumbersdecoded(String partition,
@@ -152,11 +179,13 @@ public class WordsProcessor {
 
 
     /**
+     * Process words with punctuation and return false
+     * if no need to make next checks
      * @param word         word to process
      * @param wordsList    words list for future match search
      * @param suffixesList suffixes list
      * @param out          file for the output
-     * @param startIndex
+     * @param startIndex   the index from which beginning searches
      * @param mode         encode or decode
      * @return false if no need to look for the elements in this list
      */

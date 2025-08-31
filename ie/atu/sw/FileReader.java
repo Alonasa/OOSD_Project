@@ -5,25 +5,39 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
+/**
+ * The FileReader class is responsible for processing file operations:
+ * encoding, decoding, or parsing file data.
+ * The class provides methods for reading input files,
+ * processing content using specific logic,
+ * and writing the processed data to output files.
+ */
 public class FileReader {
     //Regex patterns
     private static final Pattern BY_WORD = Pattern.compile("\\s+");
     private static final Pattern BY_COMMA = Pattern.compile(",");
     //Modes
+    private static final ArrayMode WORDS_MODE = ArrayMode.WORDS;
+    private static final ArrayMode SUFFIXES_MODE = ArrayMode.SUFFIXES;
     private static final ArrayMode ENCODE_MODE = ArrayMode.ENCODE;
-    private static final ArrayMode DECODE_MODE = ArrayMode.DECODE;
-    public static final ArrayMode SUFFIXES_MODE = ArrayMode.SUFFIXES;
 
+    /**
+     * Processes a file by reading its contents, applying encoding
+     * or decoding operations, and writing the results to
+     * a specified output file
+     *
+     * @param source the path to the source file
+     * @param output the path to the output file to store the processed content
+     * @param array a multidimensional array containing data required for encoding or decoding
+     * @param mode the mode, either encoding or decoding, defined by the ArrayMode enum
+     */
     public static void processFile(String source, String output, Object[][] array, ArrayMode mode) {
         try {
             BufferedReader br = getBufferedReader(source);
             BufferedWriter out = new BufferedWriter(new FileWriter(output, true), 8192);
-            ArraysProcessor ag = new ArraysProcessor();
-            int amountOfLines = ag.getAmountOfLines(source);
-            int indexToDecode = mode == DECODE_MODE ? 0 : 1;
-            int indexToEncode = mode == ENCODE_MODE ? 0 : 1;
+            int amountOfLines = getAmountOfLines(source);
             int linesProcessed = 0;
-            boolean encodeMode = mode == ENCODE_MODE;
+            boolean isEncodeMode = mode == ENCODE_MODE;
 
             String line = null;
 
@@ -34,17 +48,20 @@ public class FileReader {
                 ProgressBar.printProgress(linesProcessed + 1, amountOfLines);
                 String lowerCased = line.toLowerCase(Locale.ROOT);
                 //Generate a mini array of words from a line element
-                String[] words = encodeMode ? BY_WORD.split(lowerCased) : BY_COMMA.split(line);
-
+                String[] words = isEncodeMode ? BY_WORD.split(lowerCased) : BY_COMMA.split(line);
                 int wordsLength = words.length;
+
+                Object[][] wordsList = ArraysProcessor.getArrayPartition(array, WORDS_MODE);
+                Object[][] suffixesList = ArraysProcessor.getArrayPartition(array, SUFFIXES_MODE);
+
 
 
                 //traversing through words array
                 for (int wordIndex = 0; wordIndex < wordsLength; wordIndex++) {
-                    if (encodeMode) {
-                        CipherProcessor.encode(array, words, wordIndex, mode, out);
+                    if (isEncodeMode) {
+                        CipherProcessor.encode(words, wordsList, suffixesList, wordIndex, mode, out);
                     } else {
-                        CipherProcessor.decode(words, array, indexToDecode, wordIndex, out, previousLineEmpty);
+                        CipherProcessor.decode(words, array, wordIndex, mode, out, previousLineEmpty);
                         previousLineEmpty = line.length() == 2;
                     }
                 }
@@ -81,20 +98,6 @@ public class FileReader {
         }
     }
 
-    /**
-     * Process empty characters
-     * @param out the FileWriter, which attach string and comma after each index
-     */
-    public static void stringBuilder(int magicNumber, FileWriter out) {
-        //Writes an element from the array to the output file with a comma separator
-        try {
-            out.write(magicNumber);
-            out.write(",");
-        } catch (IOException e) {
-            UtilMethods.printErrorMessage("Error writing ' ' to file: ", e);
-        }
-    }
-
 
     /**
      * Optimised File I/O Operations by adding extended buffer reader size
@@ -113,6 +116,25 @@ public class FileReader {
             UtilMethods.printErrorMessage(errorMessage, e);
         }
         return result;
+    }
+
+    /**
+     * Get a number of lines in the processing file.
+     * Used for a progress meter
+     * @param source the file location
+     * @return number of lines
+     */
+    public static int getAmountOfLines(String source) {
+        int amountOfLines = 0;
+        try (BufferedReader br = getBufferedReader(source)) {
+            while (br.readLine() != null) {
+                amountOfLines++;
+            }
+            return amountOfLines;
+        } catch (IOException e) {
+            UtilMethods.printErrorMessage("Error: ", e);
+        }
+        return amountOfLines;
     }
 
 }
