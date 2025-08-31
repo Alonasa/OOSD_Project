@@ -13,6 +13,8 @@ import java.util.regex.Pattern;
  */
 public class SuffixProcessor {
     private static final Pattern BY_SUFFIX = Pattern.compile("@@");
+    private static final int ZERO_ELEMENT = 0;
+
 
     public static void buildSuffixString(String str, BufferedWriter out) throws IOException {
         boolean gotSuffix = checkForSuffix(str);
@@ -42,26 +44,30 @@ public class SuffixProcessor {
                                        ArrayMode mode,
                                        int wordsListLength,
                                        BufferedWriter out) {
-        //Method for the processing suffixes.
+        //Method for the processing suffixes. Start from the longest suffix match
         // If no match returns -1 and sends element 0 to the string builder
-        int ZERO_ELEMENT = 0;
+
         int suffixIndex = getSuffixIndex(suffixesList, word);
         if (suffixIndex > ZERO_ELEMENT) {
-            //If matched, separate the suffix from @@,
-            // splits it with the rest of the word
+            // If matched, separate the suffix from @@, splits it with the rest of the word
             String bareSuffix = (suffixesList[ZERO_ELEMENT][suffixIndex]).toString();
             String cleanSuffix = splitSuffix(bareSuffix);
             String[] wordToCheck = splitWord(word, cleanSuffix);
             if (wordToCheck.length > ZERO_ELEMENT) {
-                boolean needToFind = WordsProcessor.isExactMatch(wordToCheck[ZERO_ELEMENT],
+                //Added prefix for the future recursive call
+                String prefix = wordToCheck[ZERO_ELEMENT];
+                // Then check if the prefix has a match
+                boolean needToFind = WordsProcessor.isExactMatch(prefix,
                         wordsList, indexToEncode,
                         mode, wordsListLength, out);
 
                 if (needToFind) {
-                    FileReader.stringBuilder(wordsList, mode, ZERO_ELEMENT, out);
+                    // recursively process the prefix till get the full match
+                    processSuffixes(prefix, wordsList, suffixesList, indexToEncode, mode, wordsListLength, out);
                 }
             }
 
+            // After processing the prefix (if needed), add the suffix
             FileReader.stringBuilder(suffixesList, mode, suffixIndex, out);
         } else {
             FileReader.stringBuilder(wordsList, mode, ZERO_ELEMENT, out);
