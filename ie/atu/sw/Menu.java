@@ -83,7 +83,7 @@ public class Menu {
 
     /**
      * @param fileType Type of file for
-     * @return The file location got from user
+     * @return The file location got from the user
      */
     private String getFileLocationFromUser(String promptMessage, String fileType) {
         out.println(promptMessage);
